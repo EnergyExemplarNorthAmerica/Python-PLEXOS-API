@@ -5,3 +5,18 @@ based on these results is a common API activity.
 The scripts herein use a combination of pandas, sqlite3, and the PLEXOS API to construct 
 such reports and the extensibility to construct further reports.
 
+#1. connect.py
+Demonstrates connecting to a solution file and querying a set of results
+
+#2. query_enums.py
+Demonstrates listing out the possible values that each of the enumerations
+related to solution queries can take. Useful for modifying 1.
+
+#3. dataframe_query.py
+Demonstrates querying results into a pandas dataframe.
+
+#4. query_into_sqlite3.py
+Demonstrates pushing a solution query into a sqlite3 database.
+
+#5. query_plotting.py
+Demonstrates using matplotlib to produce a plot of PLEXOS results.
