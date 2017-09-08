@@ -1,5 +1,5 @@
 # Python PLEXOS API
-# https://github.com/EnergyExemplarNorthAmerica/Python-PLEXOS-API
+https://github.com/EnergyExemplarNorthAmerica/Python-PLEXOS-API
 
 A repository of simple Python examples for use with the PLEXOS API
 
@@ -23,6 +23,8 @@ https://energyexemplar.com/contactus/
 The authors are primarily using Anaconda Python version 2.7.x along with the PyDotNet repository, along with PLEXOS Desktop 7.4R02.
 
 https://www.anaconda.com/download/
+
 https://bitbucket.org/pydotnet/pydotnet/wiki/Home
+
 http://www.energyexemplar.com
 
