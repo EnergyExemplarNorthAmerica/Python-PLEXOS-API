@@ -78,7 +78,12 @@ modification follow.
 works, such as semiconductor masks.
 
   "The Program" refers to any copyrightable work licensed under this
-License.  Each licensee is addressed as "you".  "Licensees" and
+License.  In particular, The Program only includes those items included
+in the Python-PLEXOS-API repository, and expressly not any other software
+authored, produced, or distributed by Energy Exemplar such as PLEXOS, 
+PLEXOS Connect, or PLEXOS Enterprise, nor any software provided by other
+entities.
+Each licensee is addressed as "you".  "Licensees" and
 "recipients" may be individuals or organizations.
 
   To "modify" a work means to copy from or adapt all or part of the work
