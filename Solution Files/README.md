@@ -12,7 +12,7 @@ Demonstrates connecting to a solution file and querying a set of results
 Demonstrates listing out the possible values that each of the enumerations
 related to solution queries can take. Useful for modifying 1.
 
-#3. dataframe_query.py
+#3. query_to_pandas.py
 Demonstrates querying results into a pandas dataframe.
 
 #4. query_into_sqlite3.py

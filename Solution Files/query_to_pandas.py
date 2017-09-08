@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Connect to a PLEXOS Solution File.
+Connect to a PLEXOS Solution File, load data into pandas DataFrame,
+and write an Excel file.
 
 Created on Fri Sep 08 15:03:46 2017
 
@@ -9,6 +10,8 @@ Created on Fri Sep 08 15:03:46 2017
 
 # standard Python/SciPy libraries
 import os
+import pandas as pd
+from datetime import datetime
 
 # Python .NET interface
 from dotnet.seamless import add_assemblies, load_assembly
@@ -60,15 +63,16 @@ if results.EOF:
     print 'No results'
     exit
 
-for x in results.Fields:
-    print x.Name, '\t',
+# Create a DataFrame with a column for each column in the results
+df = pd.DataFrame(columns=[x.Name for x in results.Fields])
 
-print
-
-# loop through the recordset    
+# loop through the recordset
+idx = 0    
 while not results.EOF:
-    for x in results.Fields: 
-        print str(x.Value), '\t',
-    print
+    df.loc[idx] = [str(x.Value) for x in results.Fields]
+    idx += 1
     results.MoveNext() #VERY IMPORTANT
     
+wb = pd.ExcelWriter('query.xlsx')
+df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
+wb.save()
