@@ -15,7 +15,9 @@ PLEXOS is the fastest and most sophisticated software available today, and also 
 
 # PLEXOS Licensing
 PLEXOS® licensing is *not* included with the license for these examples. These scripts are therefore only useful to
-those with current PLEXOS licensing. For assistance with PLEXOS licensing, please visit
+those with current PLEXOS licensing. Furthermore, these scripts are *NOT* a supported part of the PLEXOS software.
+They are only illustrative of uses that could be made of the PLEXOS API by PLEXOS licensees.
+For assistance with PLEXOS licensing, please visit
 
 https://energyexemplar.com/contactus/
 
