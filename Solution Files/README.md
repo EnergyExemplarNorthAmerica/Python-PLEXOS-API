@@ -15,8 +15,11 @@ related to solution queries can take. Useful for modifying 1.
 #3. query_to_pandas.py
 Demonstrates querying results into a pandas dataframe.
 
-#4. query_into_sqlite3.py
+#4. query_to_sqlite3.py
 Demonstrates pushing a solution query into a sqlite3 database.
+
+For browsing SQLite3 data, you might want to install the DB Browser for SQLite.
+http://sqlitebrowser.org/
 
 #5. query_plotting.py
 Demonstrates using matplotlib to produce a plot of PLEXOS results.
