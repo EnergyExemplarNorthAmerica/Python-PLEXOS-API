@@ -21,5 +21,5 @@ Demonstrates pushing a solution query into a sqlite3 database.
 For browsing SQLite3 data, you might want to install the DB Browser for SQLite.
 http://sqlitebrowser.org/
 
-#5. query_plotting.py
+#5. plotting_queries.py
 Demonstrates using matplotlib to produce a plot of PLEXOS results.
