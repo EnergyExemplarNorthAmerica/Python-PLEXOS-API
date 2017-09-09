@@ -35,3 +35,4 @@ def list_method(method):
 for method in type(Solution).GetMethods():
     print list_method(method)
 
+print list_method(type(Solution).GetMethod('Query'))

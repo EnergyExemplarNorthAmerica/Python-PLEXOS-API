@@ -26,7 +26,7 @@ load_assembly('EEUTILITY')
 # Import from .NET assemblies (both PLEXOS and system)
 from PLEXOS7_NET.Core import *
 from EEUTILITY.Enums import *
-import System
+from System import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
@@ -40,25 +40,48 @@ else:
     '''
     Simple query: works similarly to PLEXOS Solution Viewer
     
-    Solution.Query(phase, collection, parent, child, period, series, props)
-        phase -> SimulationPhaseEnum
-        collection -> CollectionEnum
-        parent -> the name of a parent object or ''
-        child -> the name of a child object or ''
-        period -> PeriodEnum
-        series -> SeriesTypeEnum
-        props -> a string containing an integer indicating the Property to query or ''
-    returns a ADODB recordset... however, you don't *need* to worry about that...
+    Recordset Query(
+    	SimulationPhaseEnum SimulationPhaseId,
+    	CollectionEnum CollectionId,
+    	String ParentName,
+    	String ChildName,
+    	PeriodEnum PeriodTypeId,
+    	SeriesTypeEnum SeriesTypeId,
+    	String PropertyList[ = None],
+    	Object DateFrom[ = None],
+    	Object DateTo[ = None],
+    	String TimesliceList[ = None],
+    	String SampleList[ = None],
+    	String ModelName[ = None],
+    	AggregationEnum AggregationType[ = None],
+    	String Category[ = None],
+    	String Filter[ = None]
+    	)
     '''
     
     # Run the query
-    results = sol.Query(SimulationPhaseEnum.STSchedule, \
-                        CollectionEnum.SystemGenerators, \
-                        '', \
-                        '', \
-                        PeriodEnum.Interval, \
-                        SeriesTypeEnum.Names, \
-                        '1')
+    query = sol.Query[SimulationPhaseEnum,CollectionEnum,String,String, \
+                      PeriodEnum, SeriesTypeEnum, String, Object, Object, \
+                      String, String, String, AggregationEnum, String, \
+                      String]
+
+    params = (SimulationPhaseEnum.STSchedule, \
+              CollectionEnum.SystemGenerators, \
+              '', \
+              '', \
+              PeriodEnum.Interval, \
+              SeriesTypeEnum.Names, \
+              '1', \
+              System.DateTime.Parse('4/1/2024'), \
+              System.DateTime.Parse('4/1/2024'), \
+              '0', \
+              '', \
+              '', \
+              AggregationEnum.None, \
+              'Coal/Steam', \
+              '')
+
+    results = query.__invoke__(params)
     
     # Check to see if the query had results
     if results == None or results.EOF:
@@ -74,17 +97,18 @@ else:
         # loop through the recordset
         idx = 0    
         while not results.EOF:
-            if results.Fields['category_name'].Value == 'Coal/Steam':
-                df.loc[idx] = [datetime(x.Value.Year,x.Value.Month,x.Value.Day,x.Value.Hour,x.Value.Minute,0) if str(type(x.Value)) == 'System.DateTime' else x.Value for x in results.Fields]
-                idx += 1
+            df.loc[idx] = [datetime(x.Value.Year,x.Value.Month,x.Value.Day,x.Value.Hour,x.Value.Minute,0) if str(type(x.Value)) == 'System.DateTime' else x.Value for x in results.Fields]
+            idx += 1
             results.MoveNext() #VERY IMPORTANT
         
         # plotting the results
         # https://matplotlib.org/api/pyplot_api.html
         plot_df = df.loc[:,names]
         plot_df.index = df._date
-        ax = plot_df.plot(title='Total Generation', figsize=(18,11), stacked=True)
-        ax.set_xlabel('Generator')
+        ax = plot_df.plot(kind='area', title='Total Generation', figsize=(18,11), stacked=True)
+        ax.set_xlabel('Date and Time Starting')
         ax.set_ylabel('Generation (MWh)')
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), \
+          ncol=1, fancybox=True, shadow=True)
         # save the plot to a file
         ax.figure.savefig('generation.png')
