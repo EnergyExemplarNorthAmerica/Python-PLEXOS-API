@@ -18,12 +18,16 @@ it lists the items in ClassEnum.
 
 Demonstrates retrieving data from the PLEXOS input dataset.
 
-# 4. modify_inputs.py
+# 4. add_inputs.py
 
-Demonstrates modifying PLEXOS inputs e.g., adding objects, 
-properties, memberships, and modifying the values of existing
-attributes e.g., Horizon settings.
+Demonstrates adding PLEXOS inputs e.g., adding objects, 
+properties, memberships.
 
-# 5. create_inputs.py
+# 5. modify_inputs.py
+
+Demonstrates modifying the values of existing
+attributes e.g., Horizon settings and properties.
+
+# 6. create_inputs.py
 
 Demonstrates how to create a new dataset and add items to it.
