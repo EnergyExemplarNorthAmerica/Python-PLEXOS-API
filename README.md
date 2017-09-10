@@ -23,6 +23,7 @@ https://energyexemplar.com/contactus/
 
 # Development Environment
 The authors are primarily using Anaconda Python version 2.7.x along with the PyDotNet repository, along with PLEXOS Desktop 7.4R02.
+Also .NET Framework SDK 4.6.2 or higher is needed. However, you would have to install this to use PLEXOS.
 
 https://www.anaconda.com/download/
 
