@@ -59,12 +59,14 @@ else:
     	)
     '''
     
-    # Run the query
+    # Setup and run the query
+    # a. Alias the Query method with the arguments you plan to use.
     query = sol.Query[SimulationPhaseEnum,CollectionEnum,String,String, \
                       PeriodEnum, SeriesTypeEnum, String, Object, Object, \
                       String, String, String, AggregationEnum, String, \
                       String]
 
+    # b. Construct a tuple of values to send as parameters.
     params = (SimulationPhaseEnum.STSchedule, \
               CollectionEnum.SystemGenerators, \
               '', \
@@ -81,6 +83,7 @@ else:
               'Coal/Steam', \
               '')
 
+    # c. Use the __invoke__ method of the alias to call the method.
     results = query.__invoke__(params)
     
     # Check to see if the query had results
