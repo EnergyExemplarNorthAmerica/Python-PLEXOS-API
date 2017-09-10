@@ -28,4 +28,15 @@ db.Connection('rts_PLEXOS.xml')
 
 # list the generators
 for gen in db.GetObjects(ClassEnum.Generator):
-    for prop in db.Get
+    print gen
+    
+# query data for a generator
+rs = db.GetPropertiesTable(CollectionEnum.SystemGenerators,'','101_1')
+rs.MoveFirst()
+
+if not rs is None and not rs.EOF:
+    print ','.join([x.Name for x in rs.Fields])
+    while not rs.EOF:
+        print ','.join([str(x.Value) for x in rs.Fields])
+        rs.MoveNext()
+        
