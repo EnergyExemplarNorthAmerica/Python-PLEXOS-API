@@ -34,6 +34,7 @@ for gen in db.GetObjects(ClassEnum.Generator):
 rs = db.GetPropertiesTable(CollectionEnum.SystemGenerators,'','101_1')
 rs.MoveFirst()
 
+# write the data in the table from the ADODB.Recordset
 if not rs is None and not rs.EOF:
     print ','.join([x.Name for x in rs.Fields])
     while not rs.EOF:
