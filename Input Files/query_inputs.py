@@ -24,20 +24,44 @@ from EEUTILITY.Enums import *
 
 # Create an object to store the input data
 db = DatabaseCore()
+'''
+Void Connection(
+	String strFile
+	)
+'''
 db.Connection('rts_PLEXOS.xml')
 
+output_file = open('rts_PLEXOS.txt','w')
+
 # list the generators
+output_file.write('List of generators\n')
+'''
+String[] GetObjects(
+	ClassEnum nClassId
+	)
+'''
 for gen in db.GetObjects(ClassEnum.Generator):
-    print gen
+    output_file.write(gen + '\n')
     
 # query data for a generator
+'''
+Recordset GetPropertiesTable(
+	CollectionEnum CollectionId,
+	String ParentNameList[ = None],
+	String ChildNameList[ = None],
+	String TimesliceList[ = None],
+	String ScenarioList[ = None],
+	String CategoryList[ = None]
+	)
+'''
 rs = db.GetPropertiesTable(CollectionEnum.SystemGenerators,'','101_1')
 rs.MoveFirst()
 
 # write the data in the table from the ADODB.Recordset
 if not rs is None and not rs.EOF:
-    print ','.join([x.Name for x in rs.Fields])
+    output_file.write('\n\nProperties of generator 101_1\n' + ','.join([x.Name for x in rs.Fields])+'\n')
     while not rs.EOF:
-        print ','.join([str(x.Value) for x in rs.Fields])
+        output_file.write(','.join([str(x.Value) for x in rs.Fields])+'\n')
         rs.MoveNext()
         
+output_file.close()
