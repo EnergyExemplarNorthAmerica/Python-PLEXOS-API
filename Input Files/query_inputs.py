@@ -63,5 +63,6 @@ if not rs is None and not rs.EOF:
     while not rs.EOF:
         output_file.write(','.join([str(x.Value) for x in rs.Fields])+'\n')
         rs.MoveNext()
-        
+
+# close the output file
 output_file.close()
