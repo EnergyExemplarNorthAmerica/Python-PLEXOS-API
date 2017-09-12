@@ -8,7 +8,6 @@ Created on Sat Sep 09 19:19:57 2017
 """
 
 import os
-from shutil import copyfile
 
 # Python .NET interface
 from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
@@ -22,7 +21,6 @@ load_assembly('EEUTILITY')
 # .NET related imports
 from PLEXOS7_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-import System
 
 def add_plexos_prop(db, parent_class_id, child_class_id, collection_id, \
                     parent_name, child_name, prop_name, prop_value, \

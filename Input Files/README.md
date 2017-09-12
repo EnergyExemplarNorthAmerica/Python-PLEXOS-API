@@ -26,8 +26,23 @@ properties, memberships.
 # 5. modify_inputs.py
 
 Demonstrates modifying the values of existing
-attributes e.g., Horizon settings and properties.
+attributes e.g., Horizon settings.
 
 # 6. create_inputs.py
 
 Demonstrates how to create a new dataset and add items to it.
+
+# 7. modify_inputs2.py
+
+Demonstrates modifying values of existing properties by creating
+a Scenario and applying the scenario to the new Property then
+adding that Scenario to a Model.
+
+# 8. modify_inputs3.py
+
+Demonstrates modifying values of existing properties directly.
+Generally, this is not recommended because it requires first
+the deletion and then the addition of the Property, and in order
+to identify the Property value one would need to first query 
+the existing properties to find all of the information about
+the property row first.
