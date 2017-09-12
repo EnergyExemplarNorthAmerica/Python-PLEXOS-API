@@ -8,11 +8,11 @@ is possible to retrieve data or insert data into the dataset.
 Review the methods available in the DatabaseCore class from PLEXOS7_NET.Core.
 DatabaseCoreMethods.txt contains the PLEXOS 7.4R02 version of this output.
 
-# 2. enum_listing.py
+# 2. enum_listing2.py
 
 A duplicate of information from the Solution Files module, this lists the
 items in enumerations in the EEUTILITY assembly. In particular,
-it lists the items in ClassEnum.
+it lists the items in ClassEnum. Creates EEUTILITY_Enums.txt.
 
 # 3. query_inputs.py
 
