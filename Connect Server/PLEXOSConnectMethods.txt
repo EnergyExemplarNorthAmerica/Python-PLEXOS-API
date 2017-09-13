@@ -1,0 +1,567 @@
+String GetRunClientAssigned(
+	String strRunIndex
+	)
+String GetRunProgress(
+	String strRunIndex
+	)
+Boolean StopRun(
+	String strRunIndex
+	)
+Boolean ResumeRun(
+	String strRunIndex
+	)
+Boolean IsRunSuccessful(
+	String runIndex
+	)
+Boolean IsRunComplete(
+	String runIndex
+	)
+Boolean RestoreDeletedRun(
+	String strRunIndex
+	)
+Boolean ExpungeDeletedRun(
+	String strRunIndex
+	)
+Boolean DownloadSolution(
+	String strDestination,
+	String strRunIndex
+	)
+Boolean DownloadLog(
+	String strDestination,
+	String strRunIndex
+	)
+String QuickExecute(
+	String strJobset,
+	String strDataset,
+	Int64 lFile,
+	String strEngine,
+	String strArgs,
+	String strClient[ = ]
+	)
+String UploadTemp(
+	String strSourcePath,
+	String strDataSetFolder,
+	String strDatasetName,
+	SearchOption search
+	)
+Void MonitorRun(
+	Int64 index,
+	Action`1 log,
+	Action complete
+	)
+Void StopExecution(
+	Int64 nRunIdx
+	)
+String Execute(
+	String strJobset,
+	String strDataset,
+	String strVersion,
+	String strEngine,
+	String strArgs,
+	String strClient[ = None]
+	)
+Void UploadDataSet(
+	String strSourcePath,
+	String strFolderPath,
+	String strDatasetName,
+	String strNewVersion,
+	SearchOption search,
+	Boolean bIgnoreBaseVersion
+	)
+Void UploadDataSetAlways(
+	String strSourcePath,
+	String strFolderPath,
+	String strDatasetName,
+	String strNewVersion,
+	SearchOption search,
+	Boolean bIgnoreBaseVersion
+	)
+Void Connection(
+	String strConnection
+	)
+Boolean IsConnectionValid(
+	)
+String[] GetDatasets(
+	String strFolderPath
+	)
+String[] GetFolders(
+	String strFolderPath[ = ]
+	)
+String[] GetJobsets(
+	)
+String[] GetJobs(
+	String strJobset
+	)
+String[] GetEngines(
+	)
+String[] GetClients(
+	)
+String[] GetGroups(
+	)
+String[] GetAccounts(
+	)
+String[] GetDatasetVersions(
+	String strFolderPath,
+	String strDatasetName
+	)
+String GetDatasetLatestVersion(
+	String strFolderPath,
+	String strDatasetName
+	)
+String[] GetDatasetFiles(
+	String strFolderPath,
+	String strDatasetName,
+	String strVersion
+	)
+Boolean AddDataset(
+	String strFolderPath,
+	String strName
+	)
+Boolean RemoveDataset(
+	String strFolderPath,
+	String strDatasetName
+	)
+Boolean CheckDatasetExists(
+	String strFolderPath,
+	String strDatasetName
+	)
+Boolean CheckOutDataset(
+	String strFolderPath,
+	String strDatasetName
+	)
+Boolean CheckInDataset(
+	String strFolderPath,
+	String strDatasetName
+	)
+Boolean RenameDataset(
+	String strFolderPath,
+	String strDatasetNameOld,
+	String strDatasetNameNew
+	)
+Boolean CopyDataset(
+	String strOriginalPath,
+	String strOriginalDataset,
+	String strNewPath,
+	String strNewDataset
+	)
+Boolean AddDatasetVersion(
+	String strSourcePath,
+	String strFolderPath,
+	String strDatasetName,
+	String strNewVersion,
+	String strBaseVersion[ = ],
+	Boolean bSearchTop[ = False]
+	)
+Boolean RemoveDatasetVersion(
+	String strFolderPath,
+	String strDataset,
+	String strVersion
+	)
+Boolean CheckDatasetVersionExists(
+	String strFolderPath,
+	String strDataset,
+	String strVersion
+	)
+String GetDatasetVersionTimeStamp(
+	String strFolderPath,
+	String strDataset,
+	String strVersion
+	)
+String GetDatasetVersionBase(
+	String strFolderPath,
+	String strDataset,
+	String strVersion
+	)
+String GetDatasetVersionAccount(
+	String strFolderPath,
+	String strDataset,
+	String strVersion
+	)
+Boolean AddFolder(
+	String strNewFolder
+	)
+Boolean RemoveFolder(
+	String strFolderPath
+	)
+Boolean CheckFolderExists(
+	String strFolderPath
+	)
+String[] GetFolderPermissions(
+	String strFolderPath
+	)
+Boolean AddFolderPermission(
+	String strFolderPath,
+	String strAccountName
+	)
+Boolean RemoveFolderPermission(
+	String strFolderPath,
+	String strAccountName
+	)
+Boolean CheckFolderPermission(
+	String strFolderPath,
+	String strAccountName
+	)
+String[] GetDeletedDatasetVersions(
+	String strFolderPath,
+	String strDatasetName
+	)
+String GetDeletedDatasetVersionBase(
+	String strFolderPath,
+	String strDatasetName,
+	String strVersionName
+	)
+String GetDeletedDatasetVersionTimeStamp(
+	String strFolderPath,
+	String strDatasetName,
+	String strVersionName
+	)
+String GetDeletedDatasetVersionAccount(
+	String strFolderPath,
+	String strDatasetName,
+	String strVersionName
+	)
+Boolean RestoreDeletedDatasetVersion(
+	String strFolderPath,
+	String strDatasetName,
+	String strVersionName
+	)
+Boolean ExpungeDeletedDatasetVersion(
+	String strFolderPath,
+	String strDatasetName,
+	String strVersionName
+	)
+Boolean DownloadDataset(
+	String strDestination,
+	String strFolderPath,
+	String strDatasetName
+	)
+Boolean DownloadDatasetVersion(
+	String strDestination,
+	String strFolderPath,
+	String strDatasetName,
+	String strVersion
+	)
+Boolean DownloadDeletedDatasetVersion(
+	String strDestination,
+	String strFolderPath,
+	String strDatasetName,
+	String strVersionName
+	)
+String[] GetJobsetPermissions(
+	String strName
+	)
+Boolean AddJobset(
+	String strName
+	)
+Boolean RemoveJobset(
+	String strName
+	)
+Boolean CheckJobsetExists(
+	String strJobset
+	)
+Boolean IncreaseJobsetPriority(
+	String strName
+	)
+Boolean DecreaseJobsetPriority(
+	String strName
+	)
+Boolean RenameJobset(
+	String strJobsetName,
+	String strNewName
+	)
+Boolean CopyJobset(
+	String strJobsetName,
+	String strNewName,
+	Boolean bCopyPermissions
+	)
+Boolean AddJobsetPermission(
+	String strJobset,
+	String strAccount
+	)
+Boolean RemoveJobsetPermission(
+	String strJobset,
+	String strAccount
+	)
+Boolean CheckJobsetPermission(
+	String strJobset,
+	String strAccount
+	)
+String AddJob(
+	String strJobset,
+	String strFolderPath,
+	String strDataset,
+	String strVersion,
+	String[] strArguments,
+	String strEngine,
+	String strClient,
+	Int64 nPriority
+	)
+Boolean RemoveJob(
+	String strJobIndex
+	)
+Boolean IncreaseJobPriority(
+	String strJobIndex
+	)
+Boolean DecreaseJobPriority(
+	String strJobIndex
+	)
+String GetJobDatasetFolder(
+	String strJobIndex
+	)
+String GetJobDataset(
+	String strJobIndex
+	)
+String GetJobDatasetVersion(
+	String strJobIndex
+	)
+String GetJobJobset(
+	String strJobIndex
+	)
+String[] GetJobArguments(
+	String strJobIndex
+	)
+String GetJobEngine(
+	String strJobIndex
+	)
+String GetJobClient(
+	String strJobIndex
+	)
+Int32 GetJobPriority(
+	String strJobIndex
+	)
+Boolean SetJobDataset(
+	String strJobIndex,
+	String strFolderPath,
+	String strDataset,
+	String strVersion[ = ]
+	)
+Boolean SetJobArguments(
+	String strJobIndex,
+	String[] strArguments
+	)
+Boolean SetJobEngine(
+	String strJobIndex,
+	String strEngine
+	)
+Boolean SetJobClient(
+	String strJobIndex,
+	String strClient
+	)
+Boolean SetJobPriority(
+	String strJobIndex,
+	Int32 priority
+	)
+String[] GetDeletedEngines(
+	)
+Boolean AddEngine(
+	String strName,
+	String strSource
+	)
+Boolean RemoveEngine(
+	String strName
+	)
+Boolean CheckEngineExists(
+	String strName
+	)
+String GetEngineTimeStamp(
+	String strName
+	)
+Boolean IsEngineX64(
+	String strName
+	)
+Boolean RenameEngine(
+	String strEngineName,
+	String strNewName
+	)
+Boolean CopyEngine(
+	String strEngineName,
+	String strNewName
+	)
+String GetDeletedEngineTimeStamp(
+	String strEngineName
+	)
+Boolean RestoreDeletedEngine(
+	String strEngineName
+	)
+Boolean ExpungeDeletedEngine(
+	String strEngineName
+	)
+Boolean DownloadEngine(
+	String strName,
+	String strDestination
+	)
+Boolean DownloadDeletedEngine(
+	String strEngineName,
+	String strDestination
+	)
+String[] GetGroupMembers(
+	String strName
+	)
+Boolean CheckClientExists(
+	String strName
+	)
+Int32 GetClientStatus(
+	String strName
+	)
+Boolean PauseClient(
+	String strName
+	)
+Boolean ResumeClient(
+	String strName
+	)
+Boolean RemoveClient(
+	String strName
+	)
+String GetClientRun(
+	String strClient
+	)
+Int32 GetClientPriority(
+	String strClient
+	)
+Boolean SetClientPriority(
+	String strClient,
+	Int64 nPriority
+	)
+String GetClientProgress(
+	String strClient
+	)
+Boolean AddClientPermission(
+	String strClient,
+	String strAccount
+	)
+Boolean RemoveClientPermission(
+	String strClient,
+	String strAccount
+	)
+Boolean CheckClientPermission(
+	String strClient,
+	String strAccount
+	)
+String[] GetClientPermissions(
+	String strClient
+	)
+String[] GetClientTimeoutSettings(
+	)
+Boolean SetClientTimeoutSettings(
+	Boolean enabled,
+	String timeoutAction,
+	Int32 timeoutDays,
+	Int32 timeoutHours,
+	Int32 timeoutMinutes
+	)
+Boolean AddGroup(
+	String strName
+	)
+Boolean RemoveGroup(
+	String strName
+	)
+Boolean CheckGroupExists(
+	String strName
+	)
+Boolean AddGroupMember(
+	String strGroup,
+	String strClient
+	)
+Boolean RemoveGroupMember(
+	String strGroup,
+	String strClient
+	)
+Boolean AddAccount(
+	String strName,
+	String strPassword,
+	Int32 nRights
+	)
+Boolean RemoveAccount(
+	String strName
+	)
+Boolean CheckAccountExists(
+	String account
+	)
+Int32 GetAccountRights(
+	)
+Int32 GetAccountRights(
+	String strName
+	)
+Boolean SetAccountRights(
+	String account,
+	Int32 rights
+	)
+String[] GetRunIndexes(
+	String strTimeFrom,
+	String strTimeTo[ = -]
+	)
+String[] GetDeletedRunIndexes(
+	String strTimeFrom,
+	String strTimeTo[ = -]
+	)
+String AddRun(
+	String strJobIndex
+	)
+String AddRun(
+	String strFolderPath,
+	String strDataset,
+	String strVersion,
+	String[] strArgs,
+	String strJobset[ = ],
+	String strEngine[ = ],
+	String strClient[ = ],
+	Int32 nPriority[ = 0]
+	)
+String AddRun(
+	String strSourcePath,
+	String[] strArgs,
+	Boolean bSearchTop[ = False],
+	String strJobset[ = ],
+	String strFolderPath[ = ],
+	String strDatasetName[ = ],
+	String strEngine[ = ],
+	String strClient[ = ],
+	Int32 nPriority[ = 0]
+	)
+Boolean RemoveRun(
+	String strRunIndex
+	)
+Int32 GetRunStatus(
+	String strRunIndex
+	)
+Int32 GetRunPriority(
+	String strRunIndex
+	)
+String GetRunTimeStamp(
+	String strRunIndex
+	)
+String GetRunDatasetFolder(
+	String strRunIndex
+	)
+String GetRunDataset(
+	String strRunIndex
+	)
+String GetRunDatasetVersion(
+	String strRunIndex
+	)
+String GetRunJobset(
+	String strRunIndex
+	)
+String[] GetRunArguments(
+	String strRunIndex
+	)
+String GetRunEngine(
+	String strRunIndex
+	)
+String GetRunClient(
+	String strRunIndex
+	)
+Boolean get_DisplayAlerts(
+	)
+Void set_DisplayAlerts(
+	Boolean AutoPropertyValue
+	)
+String ToString(
+	)
+Boolean Equals(
+	Object obj
+	)
+Int32 GetHashCode(
+	)
+Type GetType(
+	)
