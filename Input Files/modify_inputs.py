@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Retrieve data from the PLEXOS input dataset
+Update PLEXOS attributes in an input dataset
 
 Created on Sat Sep 09 19:19:57 2017
 

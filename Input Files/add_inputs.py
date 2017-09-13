@@ -111,7 +111,7 @@ if os.path.exists('rts_PLEXOS.xml'):
                              Object,PeriodEnum]
     
     # b. A tuple of parameter values
-    params = (mem_id, int(PropertyIDEnum.SystemGenerators_Units), \
+    params = (mem_id, int(SystemGeneratorsEnum.Units), \
               1, 0.0, None, None, None, None, None, None, \
               0, PeriodEnum.Interval)
     
