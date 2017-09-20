@@ -74,8 +74,8 @@ else:
               PeriodEnum.Interval, \
               SeriesTypeEnum.Names, \
               '1', \
-              System.DateTime.Parse('4/1/2024'), \
-              System.DateTime.Parse('4/1/2024'), \
+              DateTime.Parse('4/1/2024'), \
+              DateTime.Parse('4/1/2024'), \
               '0', \
               '', \
               '', \
