@@ -22,13 +22,24 @@ system.
 
 # 1. api_exploration.py
 
-# 1. connect.py
+Review the characteristics of the PLEXOSConnect API class.
 
-# 1. launch.py
+# 2. connect.py
 
-# 1. upload.py
+Connect to a PLEXOS Connect server and discover its configuration.
 
-# 1. download.py
+# 3. launch.py
 
-# 1. config.py
+Launch a PLEXOS Connect simulation via the PLEXOS API, and retrieve the output.
 
+# 4. upload.py
+
+Upload a new PLEXOS Connect dataset or update an existing dataset. 
+
+# 5. download.py
+
+Download a PLEXOS Connect dataset.
+
+# 6. config.py
+
+Configure the PLEXOS Connect server by adding users, engines, jobsets, etc.
