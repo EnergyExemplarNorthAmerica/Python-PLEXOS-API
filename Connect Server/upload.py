@@ -16,7 +16,6 @@ import sys
 if not 'dotnet.seamless' in sys.modules:
     from dotnet.seamless import add_assemblies, load_assembly
 
-
 # .NET related imports
 if not 'PLEXOS7_NET.Core' in sys.modules:
     # load PLEXOS assemblies
