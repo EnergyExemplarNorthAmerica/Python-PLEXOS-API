@@ -2,20 +2,6 @@ import sys, os, re
 from shutil import copyfile
 import subprocess as sp
 
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
-
-# load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/'
-
-add_assemblies(plexos_path)
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
-
-# .NET related imports
-from PLEXOS7_NET.Core import DatabaseCore
-from EEUTILITY.Enums import *
-from System import *
 
 def run_model(plexospath, filename, foldername, modelname):
 

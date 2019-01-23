@@ -33,7 +33,15 @@ def list_method(method):
     text += '\n\t)\n'
     return text
        
+def def_method(method):
+    text = 'def {}({}):\n'.format(method.Name, ',\\\n\t\t\t'.join([str(p.Name).lower() + ('' if not p.HasDefaultValue else ' = {}'.format(p.DefaultValue)) for p in method.GetParameters()]))
+    if method.ReturnType.Name == 'Void':
+        text += '\tself.db.{}({})\n\n'.format(method.Name, ','.join([str(p.Name).lower() for p in method.GetParameters()]))
+    else:
+        text += '\treturn self.db.{}({})\n\n'.format(method.Name, ','.join([str(p.Name).lower() for p in method.GetParameters()]))
+    return text
+       
 for method in type(DatabaseCore).GetMethods():
-    print list_method(method)
+    print def_method(method)
 
-print list_method(type(DatabaseCore).GetMethod('AddProperty'))
+#print def_method(type(DatabaseCore).GetMethod('AddProperty'))
