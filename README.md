@@ -3,7 +3,7 @@ https://github.com/EnergyExemplarNorthAmerica/Python-PLEXOS-API
 
 A repository of simple Python examples for use with the PLEXOS API
 
-# PLEXOS® for Power Systems
+# PLEXOS® Integrated Energy Model
 PLEXOS® Integrated Energy Model (PLEXOS) is tried-and-true simulation software that uses state-of-the-art
 mathematical optimisation combined with the latest data handling and visualisation and distributed computing 
 methods, to provide a high-performance, robust simulation system for electric power, water and gas that is 
