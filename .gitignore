@@ -100,3 +100,11 @@ ENV/
 # mypy
 .mypy_cache/
 *.BAK
+.vscode/settings.json
+*.his
+Connect Server/.vscode/settings.json
+Solution Files/.vscode/settings.json
+Solution Files/untitled0.py
+Input Files/new (8.000 R01).xml
+new (8.000 (beta 2019-02-01)).xml
+new.xml
