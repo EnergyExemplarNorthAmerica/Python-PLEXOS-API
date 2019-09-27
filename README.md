@@ -19,7 +19,7 @@ those with current PLEXOS licensing. Furthermore, these scripts are *NOT* a supp
 They are only illustrative of uses that could be made of the PLEXOS API by PLEXOS licensees.
 For assistance with PLEXOS licensing, please visit
 
-https://energyexemplar.com/contactus/
+https://energyexemplar.com/contact-us/
 
 # Development Environment
 The authors are primarily using Anaconda Python version 3.6.x along with the PyDotNet repository, along with PLEXOS Desktop 7.5R05. 
