@@ -32,7 +32,8 @@ def list_method(method):
     text += '\n\t)\n'
     return text
        
-for method in type(Solution).GetMethods():
-    print list_method(method)
+with open('api_exploration.txt', 'w') as fout:
+    for method in type(Solution).GetMethods():
+        fout.write('{}\n'.format(list_method(method)))
 
-print list_method(type(Solution).GetMethod('Query'))
+
