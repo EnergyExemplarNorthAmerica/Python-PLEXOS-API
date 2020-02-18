@@ -9,7 +9,7 @@ Created on Mon Sep 11 12:54:57 2017
 from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/'
+plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/'
 add_assemblies(plexos_path)
 load_assembly('EEUTILITY')
 
