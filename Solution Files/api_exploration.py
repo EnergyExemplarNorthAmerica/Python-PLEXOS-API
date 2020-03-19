@@ -10,7 +10,7 @@ from dotnet.seamless import add_assemblies, load_assembly
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/')
 load_assembly('PLEXOS7_NET.Core')
 load_assembly('EEUTILITY')
 
@@ -33,6 +33,6 @@ def list_method(method):
     return text
        
 for method in type(Solution).GetMethods():
-    print list_method(method)
+    print(list_method(method))
 
-print list_method(type(Solution).GetMethod('Query'))
+print(list_method(type(Solution).GetMethod('Query')))

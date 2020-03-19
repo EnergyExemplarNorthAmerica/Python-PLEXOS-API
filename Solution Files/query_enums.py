@@ -5,9 +5,9 @@ Created on Fri Sep 08 16:03:57 2017
 @author: Steven
 """
 
-import dotnet.seamless as dot
+import dotnet as dot
 
-dot.add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+dot.add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/')
 dot.load_assembly('EEUTILITY')
 
 from EEUTILITY.Enums import *
@@ -20,7 +20,7 @@ def list_enum_names(enum):
     except:
         return ''
 
-print 'SimulationPhaseEnum', list_enum_names(type(SimulationPhaseEnum))
-print 'CollectionEnum', list_enum_names(type(CollectionEnum))
-print 'PeriodEnum', list_enum_names(type(PeriodEnum))
-print 'SeriesTypeEnum', list_enum_names(type(SeriesTypeEnum))
+print('SimulationPhaseEnum', list_enum_names(type(SimulationPhaseEnum)))
+print('CollectionEnum', list_enum_names(type(CollectionEnum)))
+print('PeriodEnum', list_enum_names(type(PeriodEnum)))
+print('SeriesTypeEnum', list_enum_names(type(SeriesTypeEnum)))

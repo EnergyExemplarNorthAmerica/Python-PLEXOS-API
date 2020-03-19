@@ -4709,7 +4709,7 @@
     <is_enabled>true</is_enabled>
     <is_integer>true</is_integer>
     <lang_id>1900</lang_id>
-    <description>Generic writer will print only non-zero valued primal and dual variables in SOL files</description>
+    <description>Generic writer will print(only non-zero valued primal and dual variables in SOL files</description>)
     <is_visible>true</is_visible>
   </t_attribute>
   <t_attribute>

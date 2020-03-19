@@ -19,7 +19,7 @@ from dotnet.seamless import add_assemblies, load_assembly
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/')
 load_assembly('PLEXOS7_NET.Core')
 load_assembly('EEUTILITY')
 
@@ -33,7 +33,7 @@ sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
 csv_file = 'generator_data.csv'
 
 if not os.path.exists(sol_file):
-    print 'No such file'
+    print('No such file')
     exit
     
 sol.Connection(sol_file)

@@ -15,7 +15,7 @@ from dotnet.seamless import add_assemblies, load_assembly
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/')
 load_assembly('PLEXOS7_NET.Core')
 load_assembly('EEUTILITY')
 
@@ -27,7 +27,7 @@ from EEUTILITY.Enums import *
 sol = Solution()
 sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
 if not os.path.exists(sol_file):
-    print 'No such file'
+    print('No such file')
     exit
     
 sol.Connection(sol_file)
@@ -57,18 +57,18 @@ results = sol.Query(SimulationPhaseEnum.STSchedule, \
 
 # Check to see if the query had results
 if results.EOF:
-    print 'No results'
+    print('No results')
     exit
 
 for x in results.Fields:
-    print x.Name, '\t',
+    print(x.Name, '\t',)
 
 print
 
 # loop through the recordset    
 while not results.EOF:
     for x in results.Fields: 
-        print str(x.Value), '\t',
+        print(str(x.Value), '\t',)
     print
     results.MoveNext() #VERY IMPORTANT
     

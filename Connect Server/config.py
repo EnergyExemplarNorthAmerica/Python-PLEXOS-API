@@ -20,13 +20,13 @@ if not 'dotnet.seamless' in sys.modules:
 # .NET related imports
 if not 'PLEXOS7_NET.Core' in sys.modules:
     # load PLEXOS assemblies
-    add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+    add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/')
     load_assembly('PLEXOS7_NET.Core')
     import PLEXOS7_NET.Core as plx
 
 if not 'EEUTILITY.Enums' in sys.modules:
     # load PLEXOS assemblies
-    add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+    add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/')
     load_assembly('EEUTILITY')
     from EEUTILITY.Enums import *
 
@@ -36,11 +36,11 @@ if not 'System' in sys.modules:
 if not 'System.IO' in sys.modules:
     from System.IO import SearchOption
 
-server = raw_input('Server:   ')
-username = raw_input('Username: ')
+server = input('Server:   ')
+username = input('Username: ')
 password = getpass.getpass('Password: ')
-folder = raw_input('Folder:   ')
-dataset = raw_input('Dataset:  ')
+folder = input('Folder:   ')
+dataset = input('Dataset:  ')
 
 if len(dataset) == 0:
     dataset = 'testdb'

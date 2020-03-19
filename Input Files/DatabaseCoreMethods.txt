@@ -33,7 +33,7 @@ Int32 ObjectName2Id(
 	String Name
 	)
 
-String[] GetObjects(
+Strings(
 	ClassEnum nClassId
 	)
 

@@ -9,7 +9,7 @@ Created on Sat Sep 09 20:33:10 2017
 from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
+plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/'
 add_assemblies(plexos_path)
 load_assembly('PLEXOS7_NET.Core')
 load_assembly('EEUTILITY')
@@ -36,7 +36,7 @@ def list_enum_names(t):
     
 # traverse all enums
 for t in type(ClassEnum).Assembly.GetTypes():
-    print list_enum_names(t)
+    print(list_enum_names(t))
     
 # ClassEnum is immediately useful
-print list_enum_names(type(ClassEnum))
+print(list_enum_names(type(ClassEnum)))

@@ -151,7 +151,7 @@ def attach_datafile_to_object(plexosfile, datafilename, collectionenum, property
                                     None if 'Scenario' not in fields else fields['Scenario'], \
                                    '=' if 'Action' not in fields else fields['Action'], \
                                    PeriodEnum.Interval))
-        print fields
+        print(fields)
         
         res.MoveNext()
     

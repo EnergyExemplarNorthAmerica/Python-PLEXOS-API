@@ -17,6 +17,6 @@ db.Connection('test2.xml')
 res = db.GetPropertiesTable(CollectionEnum.SystemRegions, 'System', 'B')
 while not res.EOF:
     for fld in res.Fields:
-        print '"{}" = {}'.format(fld.Name, fld.Value)
+        print('"{}" = {}'.format(fld.Name, fld.Value))
     res.MoveNext()
     

@@ -11,7 +11,7 @@ Created on Sat Sep 09 20:11:21 2017
 from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
+plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.5/'
 add_assemblies(plexos_path)
 load_assembly('PLEXOS7_NET.Core')
 load_assembly('EEUTILITY')
