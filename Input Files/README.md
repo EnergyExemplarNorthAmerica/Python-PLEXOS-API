@@ -6,7 +6,7 @@ is possible to retrieve data or insert data into the dataset.
 # 1. api_exploration.py
 
 Review the methods available in the DatabaseCore class from PLEXOS7_NET.Core.
-DatabaseCoreMethods.txt contains the PLEXOS 7.4R02 version of this output.
+DatabaseCoreMethods.txt contains the PLEXOS 8.1R02 version of this output.
 
 # 2. enum_listing2.py
 
@@ -38,11 +38,3 @@ Demonstrates modifying values of existing properties by creating
 a Scenario and applying the scenario to the new Property then
 adding that Scenario to a Model.
 
-# 8. modify_inputs3.py
-
-Demonstrates modifying values of existing properties directly.
-Generally, this is not recommended because it requires first
-the deletion and then the addition of the Property, and in order
-to identify the Property value one would need to first query 
-the existing properties to find all of the information about
-the property row first.
