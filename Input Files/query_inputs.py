@@ -7,16 +7,12 @@ Created on Sat Sep 09 19:19:57 2017
 @author: Steven
 """
 
-import os
-
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
+import os, sys, clr
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
-add_assemblies(plexos_path)
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 from PLEXOS7_NET.Core import DatabaseCore
