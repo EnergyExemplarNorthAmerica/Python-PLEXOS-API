@@ -7,23 +7,21 @@ Created on Sat Sep 09 19:19:57 2017
 @author: Steven
 """
 
-import os
+import os, sys, clr
 from datetime import datetime
 from shutil import copyfile
 
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
-
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
-add_assemblies(plexos_path)
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+# unfortunately there was an error in the PLEXOS 8.1 API that caused
+#   scenario tagging to fail. It was fixed in version 8.2.
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 from PLEXOS7_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from System import *
+from System import DateTime
 
 if os.path.exists('rts_PLEXOS.xml'):
 
@@ -36,6 +34,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     
     # Create an object to store the input data
     db = DatabaseCore()
+    db.DisplayAlerts = False
     db.Connection('rts4.xml')
 
     # Add a category of scenarios if needed
@@ -82,9 +81,6 @@ if os.path.exists('rts_PLEXOS.xml'):
     	PeriodEnum PeriodTypeId
     	)
     '''
-    # alias
-    add_prop = db.AddProperty[Int32,Int32,Int32,Double,Object,Object, \
-                              Object,Object,Object,Object,Object,PeriodEnum]
     
     # parameters
     mem_id = db.GetMembershipID(CollectionEnum.SystemFuels,'System','NG/CT')
@@ -97,8 +93,12 @@ if os.path.exists('rts_PLEXOS.xml'):
     
     # invoke
     for p in params:
-        add_prop.__invoke__(p)
-    
+        '''
+        If you use version 8.1 there will be an exception here stating 
+        that the scenario couldn't be found. Switch to 8.0 or 8.2.
+        '''
+        db.AddProperty(*p)
+
     # Add the scenario to a model
     '''
     Int32 AddMembership(
