@@ -7,17 +7,13 @@ Created on Sat Sep 09 19:19:57 2017
 @author: Steven
 """
 
-import os
+import os, sys, clr
 from shutil import copyfile
 
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
-
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
-add_assemblies(plexos_path)
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 from PLEXOS7_NET.Core import DatabaseCore
@@ -66,8 +62,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     <---- not necessary in this case since APIHorizon was copied
         from Q1 DA
     '''
-    #db.AddMembership(CollectionEnum.ModelHorizon, 'APIModel', 'APIHorizon')    
-    
+    db.AddMembership(CollectionEnum.ModelHorizon, 'APIModel', 'APIHorizon')    
+    db.AddMembership(CollectionEnum.ModelReport, 'APIModel', 'Default Report')
     '''
     Boolean UpdateAttribute(
     	ClassEnum nClassId,
@@ -76,27 +72,22 @@ if os.path.exists('rts_PLEXOS.xml'):
     	Double dNewValue <--- always a Double... need to convert DateTime to Double
                          <--- using the ToOADate() method of the DateTime class
     	)
-    '''
-
-    # aliases for UpdateAttribute and AddAttribute methods      
-    update = db.UpdateAttribute[ClassEnum,String,Int32,Double]
-    add = db.AddAttribute[ClassEnum,String,Int32,Double]
-    
+    '''    
     # a list of tuples... these tuples match the signature of UpdateAttribute and AddAttribute
     #   i.e., (ClassEnum, String, Int32, Double)
-    attr = [(ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.DateFrom), DateTime(2024,1,1).ToOADate()), \
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.StepType), 4.0), \
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.StepCount), 1.0), \
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoDateFrom), DateTime(2024,2,15).ToOADate()), \
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoStepType), 2.0), \
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoAtaTime), 3.0), \
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoStepCount), 4.0)]
+    attr = [(ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.DateFrom, DateTime(2024,1,1).ToOADate()), \
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.StepType, 4.0), \
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.StepCount, 1.0), \
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoDateFrom, DateTime(2024,2,15).ToOADate()), \
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoStepType, 2.0), \
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoAtaTime, 3.0), \
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoStepCount, 4.0)]
 
     # loop through the attributes to add/update    
     for param in attr:
-        if not update.__invoke__(param):
+        if not db.UpdateAttribute(*param):
             # if we cannot update it, add it
-            add.__invoke__(param)
+            db.AddAttribute(*param)
             
     # save the data set
     db.Close()
