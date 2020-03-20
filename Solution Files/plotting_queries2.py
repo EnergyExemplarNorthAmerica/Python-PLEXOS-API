@@ -9,30 +9,27 @@ Created on Fri Sep 08 15:03:46 2017
 """
 
 # standard Python/SciPy libraries
-import os
+import os, sys, clr
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly
-
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # Import from .NET assemblies (both PLEXOS and system)
 from PLEXOS7_NET.Core import *
 from EEUTILITY.Enums import *
-from System import *
+from System import Enum, DateTime
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
 sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
 if not os.path.exists(sol_file):
-    print 'No such file'
+    print('No such file')
 else:
         
     sol.Connection(sol_file)
@@ -60,14 +57,7 @@ else:
     '''
     
     # Setup and run the query
-    # a. Alias the Query method with the arguments you plan to use.
-    query = sol.Query[SimulationPhaseEnum,CollectionEnum,String,String, \
-                      PeriodEnum, SeriesTypeEnum, String, Object, Object, \
-                      String, String, String, AggregationEnum, String, \
-                      String]
-
-    # b. Construct a tuple of values to send as parameters.
-    params = (SimulationPhaseEnum.STSchedule, \
+    results = sol.Query(SimulationPhaseEnum.STSchedule, \
               CollectionEnum.SystemGenerators, \
               '', \
               '', \
@@ -79,16 +69,13 @@ else:
               '0', \
               '', \
               '', \
-              AggregationEnum.None, \
+              0, \
               'Coal/Steam', \
               '')
-
-    # c. Use the __invoke__ method of the alias to call the method.
-    results = query.__invoke__(params)
-    
+   
     # Check to see if the query had results
     if results == None or results.EOF:
-        print 'No results'
+        print('No results')
     
     else:
     

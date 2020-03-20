@@ -8,16 +8,12 @@ Created on Fri Sep 08 15:03:46 2017
 """
 
 # standard Python/SciPy libraries
-import os
+import os, clr, sys
 
 # Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly
-
-# load PLEXOS assemblies... replace the path below with the installation
-#   installation folder for your PLEXOS installation.
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # Import from .NET assemblies (both PLEXOS and system)
 from PLEXOS7_NET.Core import *
@@ -27,9 +23,8 @@ from EEUTILITY.Enums import *
 sol = Solution()
 sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
 if not os.path.exists(sol_file):
-    print 'No such file'
+    print('No such file')
     exit
-    
 sol.Connection(sol_file)
 
 '''
@@ -57,18 +52,15 @@ results = sol.Query(SimulationPhaseEnum.STSchedule, \
 
 # Check to see if the query had results
 if results.EOF:
-    print 'No results'
+    print('No results')
     exit
+else:
+    results.MoveFirst()
 
-for x in results.Fields:
-    print x.Name, '\t',
-
-print
+print('\t'.join([x.Name for x in results.Fields]))
 
 # loop through the recordset    
 while not results.EOF:
-    for x in results.Fields: 
-        print str(x.Value), '\t',
-    print
+    print('\t'.join([str(x.Value) for x in results.Fields]))
     results.MoveNext() #VERY IMPORTANT
     
