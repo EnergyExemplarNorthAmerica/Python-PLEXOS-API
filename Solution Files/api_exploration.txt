@@ -2,44 +2,6 @@ Void Connection(
 	String strFile
 	)
 
-Recordset Query(
-	SimulationPhaseEnum SimulationPhaseId,
-	CollectionEnum CollectionId,
-	String ParentName,
-	String ChildName,
-	PeriodEnum PeriodTypeId,
-	SeriesTypeEnum SeriesTypeId,
-	String PropertyList[ = None],
-	Object DateFrom[ = None],
-	Object DateTo[ = None],
-	String TimesliceList[ = None],
-	String SampleList[ = None],
-	String ModelName[ = None],
-	AggregationEnum AggregationType[ = None],
-	String Category[ = None],
-	String Filter[ = None]
-	)
-
-Boolean QueryToCSV(
-	String strCSVFile,
-	Boolean bAppendToFile,
-	SimulationPhaseEnum SimulationPhaseId,
-	CollectionEnum CollectionId,
-	String ParentName,
-	String ChildName,
-	PeriodEnum PeriodTypeId,
-	SeriesTypeEnum SeriesTypeId,
-	String PropertyList[ = None],
-	Object DateFrom[ = None],
-	Object DateTo[ = None],
-	String TimesliceList[ = None],
-	String SampleList[ = None],
-	String ModelName[ = None],
-	AggregationEnum AggregationType[ = None],
-	String Category[ = None],
-	String Separator[ = ,]
-	)
-
 Void Close(
 	)
 
@@ -148,6 +110,24 @@ String[] GetSelectedColumns(
 Void CleanSelectedColumns(
 	)
 
+Recordset Query(
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Filter[ = None]
+	)
+
 SolutionResultList QueryToList(
 	SimulationPhaseEnum SimulationPhaseId,
 	CollectionEnum CollectionId,
@@ -161,9 +141,29 @@ SolutionResultList QueryToList(
 	String TimesliceList[ = None],
 	String SampleList[ = None],
 	String ModelName[ = None],
-	AggregationEnum AggregationType[ = None],
+	AggregationEnum AggregationType[ = 0],
 	String Category[ = None],
 	String Filter[ = None]
+	)
+
+Boolean QueryToCSV(
+	String strCSVFile,
+	Boolean bAppendToFile,
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Separator[ = ,]
 	)
 
 String get_SystemName(
@@ -221,9 +221,6 @@ Void set_DisplayAlerts(
 	Boolean AutoPropertyValue
 	)
 
-String ToString(
-	)
-
 Boolean Equals(
 	Object obj
 	)
@@ -232,5 +229,8 @@ Int32 GetHashCode(
 	)
 
 Type GetType(
+	)
+
+String ToString(
 	)
 
