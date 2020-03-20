@@ -9,19 +9,15 @@ Created on Fri Sep 08 15:03:46 2017
 """
 
 # standard Python/SciPy libraries
-import os
+import os, clr, sys
 import pandas as pd
 from datetime import datetime
 
-
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly
-
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # Import from .NET assemblies (both PLEXOS and system)
 from PLEXOS7_NET.Core import *
@@ -33,7 +29,7 @@ sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
 csv_file = 'generator_data.csv'
 
 if not os.path.exists(sol_file):
-    print 'No such file'
+    print('No such file')
     exit
     
 sol.Connection(sol_file)

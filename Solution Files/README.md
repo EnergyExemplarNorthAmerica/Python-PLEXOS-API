@@ -14,9 +14,10 @@ Demonstrates connecting to a solution file and querying a set of results
 Demonstrates listing out the possible values that each of the enumerations
 related to solution queries can take. Useful for modifying 1.
 
-#3. query_to_pandas.py
+#3. query_to_pandas.py and query_to_pandas_via_csv.py
 
-Demonstrates querying results into a pandas dataframe.
+Demonstrates querying results into a pandas dataframe. _via_csv is better for 
+large volumes of data.
 
 #4. query_to_sqlite3.py
 
@@ -36,13 +37,4 @@ Use Python to explore the methods available to the Solution class.
 #7. plotting_queries2.py
 
 Introduces pivoting out by object name and plotting multiple series on the
-same chart. Also introduces an important methodology for using pyDotNet with
-methods with many parameters i.e., number of parameters > 10.
-
-Three steps:
-
-a. Alias the Query method with the arguments you plan to use.
-
-b. Construct a tuple of values to send as parameters.
-
-c. Use the __invoke__ method of the alias to call the method.
+same chart.

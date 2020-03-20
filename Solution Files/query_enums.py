@@ -5,12 +5,14 @@ Created on Fri Sep 08 16:03:57 2017
 @author: Steven
 """
 
-import dotnet as dot
+import os, sys, clr
 
-dot.add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-dot.load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('EEUTILITY')
 
+from EEUTILITY import Enums
 from EEUTILITY.Enums import *
+from System import Enum, Type
 
 def list_enum_names(enum):
     try:
@@ -22,6 +24,7 @@ def list_enum_names(enum):
 
 with open('query_enums.txt','w') as fout:
     # traverse all enums
-    for t in type(CollectionEnum).Assembly.GetTypes():
-        fout.write('{}{}\n\n'.format(t.Name, list_enum_names(t)))
+    for t in clr.GetClrType(CollectionEnum).Assembly.GetTypes():
+        if t.IsEnum:
+            fout.write('{}{}\n\n'.format(t.Name, list_enum_names(t)))
 
