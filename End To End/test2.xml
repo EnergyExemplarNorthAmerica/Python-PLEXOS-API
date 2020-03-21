@@ -13233,6 +13233,12 @@
     <value>0</value>
   </t_data>
   <t_data>
+    <data_id>18</data_id>
+    <membership_id>6</membership_id>
+    <property_id>1112</property_id>
+    <value>120</value>
+  </t_data>
+  <t_data>
     <data_id>19</data_id>
     <membership_id>7</membership_id>
     <property_id>1173</property_id>
@@ -13575,7 +13581,7 @@
     <class_id>49</class_id>
     <name>Load File</name>
     <category_id>49</category_id>
-    <GUID>e473c5ee-fa7d-46f1-8f49-83ad23714e20</GUID>
+    <GUID>6f1125f0-f889-4369-846a-e858fba1b9c4</GUID>
   </t_object>
   <t_property>
     <property_id>1</property_id>
@@ -58771,14 +58777,15 @@
     <name>Pass-through</name>
     <lang_id>6</lang_id>
   </t_property_group>
-  <t_tag>
-    <data_id>23</data_id>
-    <object_id>15</object_id>
-  </t_tag>
   <t_text>
     <data_id>22</data_id>
-    <class_id>49</class_id>
+    <class_id>50</class_id>
     <value>CSV Files\load.csv</value>
+  </t_text>
+  <t_text>
+    <data_id>23</data_id>
+    <class_id>50</class_id>
+    <value>Load File</value>
   </t_text>
   <t_unit>
     <unit_id>0</unit_id>

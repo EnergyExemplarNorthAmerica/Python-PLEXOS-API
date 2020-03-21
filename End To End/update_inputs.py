@@ -14,15 +14,18 @@ Created on Sat Sep 09 19:19:57 2017
 @author: Steven
 """
 
-import os
+import os, sys, clr
 from datetime import datetime
 from shutil import copyfile
-import end_to_end_api
+
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 from PLEXOS7_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from System import *
+from System import Object, String, Int32, Double
 
 def create_datafile_object(plexosfile, datafilename, datafilepath, copyfileto=''):
     if not os.path.exists(plexosfile):
@@ -67,10 +70,7 @@ def create_datafile_object(plexosfile, datafilename, datafilepath, copyfileto=''
     	PeriodEnum PeriodTypeId
     	)
     '''
-    # alias
-    add_prop = db.AddProperty[Int32,Int32,Int32,Double,Object,Object, \
-                              Object,Object,Object,Object,Object,PeriodEnum]
-    
+   
     # parameters
     mem_id = db.GetMembershipID(CollectionEnum.SystemDataFiles, 'System', datafilename)
     enum_id = int(SystemDataFilesEnum.Filename) 
@@ -80,7 +80,7 @@ def create_datafile_object(plexosfile, datafilename, datafilepath, copyfileto=''
     
     # invoke
     for p in params:
-        add_prop.__invoke__(p)
+        db.AddProperty(*p)
     
     # Add the scenario to a model
     '''
@@ -136,22 +136,20 @@ def attach_datafile_to_object(plexosfile, datafilename, collectionenum, property
     mem_id = db.GetMembershipID(collectionenum, parentname, objectname)
     enum_id = int(propertyenum) 
 
-    remove_prop = db.RemoveProperty[Int32, Int32, Int32, Object, Object, Object, Object, \
-                                    Object, Object, Object, PeriodEnum]
     while not res.EOF:
         fields = dict([(res.Fields[i].Name.replace('_x0020_', ''), res.Fields[i].Value) for i in range(res.Fields.Count)])
         if fields['Property'] == str(propertyenum):
-            remove_prop.__invoke__((mem_id, enum_id, \
-                                   1 if 'Band' not in fields else int(fields['Band']), \
-                                    None if 'DateFrom' not in fields else fields['DateFrom'], \
-                                    None if 'DateTo' not in fields else fields['DateTo'], \
-                                    None if 'Variable' not in fields else fields['Variable'], \
-                                    None if 'DataFile' not in fields else fields['DataFile'], \
-                                    None if 'Pattern' not in fields else fields['Pattern'], \
-                                    None if 'Scenario' not in fields else fields['Scenario'], \
-                                   '=' if 'Action' not in fields else fields['Action'], \
-                                   PeriodEnum.Interval))
-        print fields
+            db.RemoveProperty(mem_id, enum_id, \
+                            1 if 'Band' not in fields else int(fields['Band']), \
+                            None if 'DateFrom' not in fields else fields['DateFrom'], \
+                            None if 'DateTo' not in fields else fields['DateTo'], \
+                            None if 'Variable' not in fields else fields['Variable'], \
+                            None if 'DataFile' not in fields else fields['DataFile'], \
+                            None if 'Pattern' not in fields else fields['Pattern'], \
+                            None if 'Scenario' not in fields else fields['Scenario'], \
+                            '=' if 'Action' not in fields else fields['Action'], \
+                            PeriodEnum.Interval)
+        print(fields)
         
         res.MoveNext()
     
@@ -174,10 +172,6 @@ def attach_datafile_to_object(plexosfile, datafilename, collectionenum, property
     	PeriodEnum PeriodTypeId
     	)
     '''
-    # alias
-    add_prop = db.AddProperty[Int32,Int32,Int32,Double,Object,Object, \
-                              Object,Object,Object,Object,Object,PeriodEnum]
-    
     # parameters
     mem_id = db.GetMembershipID(collectionenum, parentname, objectname)
     enum_id = int(propertyenum) 
@@ -187,7 +181,7 @@ def attach_datafile_to_object(plexosfile, datafilename, collectionenum, property
     
     # invoke
     for p in params:
-        add_prop.__invoke__(p)
+        db.AddProperty(*p)
     
     # Add the scenario to a model
     '''
@@ -203,7 +197,7 @@ def attach_datafile_to_object(plexosfile, datafilename, collectionenum, property
     db.Close()
     
 def update_load_csv_file(csv_file, start_date, data, minutes_per_interval = 60):
-    row_length = 24*60/minutes_per_interval
+    row_length = int(24*60/minutes_per_interval)
     rows = int((len(data) - 1)/row_length) + 1
     with open(csv_file, 'w') as fout:
         fout.write('Year,Month,Day,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24\n')
