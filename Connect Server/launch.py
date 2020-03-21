@@ -12,25 +12,24 @@ import getpass
 from time import sleep
 from datetime import datetime
 
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly
+import os, sys, clr
 
 # load PLEXOS assemblies
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 import PLEXOS7_NET.Core as plx
 from EEUTILITY.Enums import *
 from System import *
 
-server = raw_input('Server:   ')
-username = raw_input('Username: ')
+server = input('Server:   ')
+username = input('Username: ')
 password = getpass.getpass('Password: ')
-folder = raw_input('Folder:   ')
-dataset = raw_input('Dataset:  ')
-jobset = raw_input('Jobset:   ')
+folder = input('Folder:   ')
+dataset = input('Dataset:  ')
+jobset = input('Jobset:   ')
 
 if len(jobset) == 0:
     jobset = 'API{:%Y%m%d%H%M}'.format(datetime.now())
@@ -42,27 +41,27 @@ cxn.Connection('Data Source={};User Id={};Password={}'.format(server,username,pa
 # verify that the dataset exists
 if cxn.CheckDatasetExists(folder,dataset):
     
-    print
-    print 'Select the dataset version'
+    print()
+    print('Select the dataset version')
     # List out the versions
     for v in cxn.GetDatasetVersions(folder,dataset):
-        print v
+        print(v)
         
-    version = raw_input('Which version? (Enter for latest)')
+    version = input('Which version? (Enter for latest)')
     
     print
-    print 'Select the .xml database'
+    print('Select the .xml database')
     files = cxn.GetDatasetFiles(folder,dataset,version)
     
     # list out all of the files
     for (idx, f) in zip(range(len(files)),files):
-        print idx + 1, '--->', f
+        print(idx + 1, '--->', f)
         
-    file_num = int(raw_input('Which file? (Enter the number): '))
+    file_num = int(input('Which file? (Enter the number): '))
     
     # prompt user to select a Model
     xml_file = files[file_num - 1]
-    model = raw_input('\nModel: (in this example you need to know the name) ')
+    model = input('\nModel: (in this example you need to know the name) ')
     
     # Remove the jobset as needed
     if cxn.CheckJobsetExists(jobset):
@@ -80,17 +79,18 @@ if cxn.CheckDatasetExists(folder,dataset):
         
         # track the progress of the run
         while not cxn.IsRunComplete(run_id):
-            print cxn.GetRunProgress(run_id)
+            print(cxn.GetRunProgress(run_id))
         
         # Download the result
         cxn.DownloadSolution('.', run_id)
-        print 'Run', run_id, 'is complete.'
+        print('Run', run_id, 'is complete.')
         
         
     else:
-        print 'Jobset', jobset, 'not created.'
+        print('Jobset', jobset, 'not created.')
         
     
 else:
     
-    print 'Dataset does not exist'
+    print('Dataset does not exist')
+    

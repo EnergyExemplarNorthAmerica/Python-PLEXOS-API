@@ -6,64 +6,64 @@ Created on Mon Jun 05 11:36:46 2017
 """
 
 # standard Python/SciPy libraries
-import getpass
-
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly
+import getpass, os, sys, clr
 
 # load PLEXOS assemblies
-add_assemblies('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 import PLEXOS7_NET.Core as plx
 from EEUTILITY.Enums import *
 from System import *
 
-server = raw_input('Server:   ')
-username = raw_input('Username: ')
+server = input('Server:   ')
+username = input('Username: ')
 password = getpass.getpass('Password: ')
 
 # connect to the PLEXOS Connect server
 cxn = plx.PLEXOSConnect()
 cxn.Connection('Data Source={};User Id={};Password={}'.format(server,username,password))
 
-print '*'*30
-print 'Datasets'
-print '*'*30
+print('*'*30)
+print('Datasets')
+print('*'*30)
 for folder in [''] + list(cxn.GetFolders()):
-    print folder
+    print(folder)
+    idx = 0
     for dataset in cxn.GetDatasets(folder):
-        print '\t', dataset
+        idx += 1
+        print('\t', dataset)
         for version in cxn.GetDatasetVersions(folder,dataset):
-            print '\t\t', version
+            print('\t\t', version)
+        if idx >= 10: break # only list 10 datasets (takes too long)
 
-print
-print '*'*30
-print 'Jobsets'
-print '*'*30
+print()
+print('*'*30)
+print('Jobsets')
+print('*'*30)
 for jobset in cxn.GetJobsets():
-    print jobset
+    print(jobset)
     
-print
-print '*'*30
-print 'Clients'
-print '*'*30
+print()
+print('*'*30)
+print('Clients')
+print('*'*30)
 for client in cxn.GetClients():
-    print client
+    print(client)
     
-print
-print '*'*30
-print 'Accounts'
-print '*'*30
+print()
+print('*'*30)
+print('Accounts')
+print('*'*30)
 for acct in cxn.GetAccounts():
-    print acct
+    print(acct)
     
-print
-print '*'*30
-print 'Engines'
-print '*'*30
+print()
+print('*'*30)
+print('Engines')
+print('*'*30)
 for engine in cxn.GetEngines():
-    print engine
+    print(engine)
     

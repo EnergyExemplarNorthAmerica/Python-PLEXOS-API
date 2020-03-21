@@ -7,19 +7,16 @@ Created on Sat Sep 09 20:11:21 2017
 @author: Steven
 """
 
-# Python .NET interface
-from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
+import os, sys, clr
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
-add_assemblies(plexos_path)
-load_assembly('PLEXOS7_NET.Core')
-load_assembly('EEUTILITY')
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('EEUTILITY')
 
 # .NET related imports
 from PLEXOS7_NET.Core import PLEXOSConnect
 
-fout = open('PLEXOSConnectMethods.txt','w')
 def list_method(method):
     text = '{} {}('.format(method.ReturnType.Name, method.Name)
     isFirst = True
@@ -34,6 +31,5 @@ def list_method(method):
     text += '\n\t)\n'
     return text
        
-fout.writelines([list_method(method) for method in type(PLEXOSConnect).GetMethods()])
-
-fout.close()
+with open('PLEXOSConnectMethods.txt','w') as fout:
+    fout.writelines([list_method(method) for method in clr.GetClrType(PLEXOSConnect).GetMethods()])
