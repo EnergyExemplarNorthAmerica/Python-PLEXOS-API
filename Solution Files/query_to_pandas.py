@@ -60,15 +60,9 @@ if results.EOF:
     print('No results')
     exit
 
-# Create a DataFrame with a column for each column in the results
-df = pd.DataFrame(columns=[x.Name for x in results.Fields])
-
-# loop through the recordset
-idx = 0    
-while not results.EOF:
-    df.loc[idx] = [str(x.Value) for x in results.Fields]
-    idx += 1
-    results.MoveNext() #VERY IMPORTANT
+# Create a DataFrame with a column for each selected column in the results.
+resultsRows = results.GetRows()
+df = pd.DataFrame([[resultsRows[i, j] for i in range(resultsRows.GetLength(0))] for j in range(resultsRows.GetLength(1))],columns = [x.Name for x in results.Fields])
     
 wb = pd.ExcelWriter('query.xlsx')
 df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
