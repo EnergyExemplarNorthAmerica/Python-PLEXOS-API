@@ -131,6 +131,10 @@ String[] GetJobs(
 	String strFolderPath,
 	String strName
 	)
+IEnumerable`1 GetJobsEx(
+	String strFolderPath,
+	String strName
+	)
 Boolean IncreaseJobPriority(
 	String strJobIndex
 	)
@@ -191,7 +195,13 @@ Boolean SetJobTag(
 	String strTag
 	)
 String AddRun(
-	String strJobIndex
+	String strJobIndex,
+	String strEngineName[ = ]
+	)
+String[] AddRunByJobset(
+	String strJobsetPath,
+	String strJobsetName,
+	String strEngineName[ = ]
 	)
 String AddRun(
 	String strDatasetPath,
@@ -257,6 +267,15 @@ String[] GetRunIndexes(
 String[] GetDeletedRunIndexes(
 	String strTimeFrom,
 	String strTimeTo[ = ]
+	)
+IEnumerable`1 GetRuns(
+	Boolean bDeletedRuns[ = False],
+	Nullable`1 dtTimeFrom[ = None],
+	Nullable`1 dtTimeTo[ = None]
+	)
+IEnumerable`1 GetRuns(
+	IEnumerable`1 filter,
+	Boolean bDeletedRuns[ = False]
 	)
 Int32 GetRunStatus(
 	String strRunIndex
@@ -338,6 +357,9 @@ Boolean IsRunComplete(
 	)
 Int32 GetSplitRunStatus(
 	String strParentIndex
+	)
+String GetRunSummary(
+	String strRunIndex
 	)
 Boolean DownloadSolution(
 	String strDestination,

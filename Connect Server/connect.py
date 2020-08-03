@@ -9,7 +9,7 @@ Created on Mon Jun 05 11:36:46 2017
 import getpass, os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -18,13 +18,19 @@ import PLEXOS7_NET.Core as plx
 from EEUTILITY.Enums import *
 from System import *
 
-server = input('Server:   ')
-username = input('Username: ')
-password = getpass.getpass('Password: ')
+server =   input('Server:          ')
+port =     input('Port (def:8888): ')
+try:
+    port = int(port)
+except:
+    port = 8888
+username = input('Username:        ')
+password = getpass.getpass('Password:        ')
 
 # connect to the PLEXOS Connect server
 cxn = plx.PLEXOSConnect()
-cxn.Connection('Data Source={};User Id={};Password={}'.format(server,username,password))
+cxn.DisplayAlerts = False
+cxn.Connection('Data Source={}:{};User Id={};Password={}'.format(server,port,username,password))
 
 print('*'*30)
 print('Datasets')
@@ -32,10 +38,10 @@ print('*'*30)
 for folder in [''] + list(cxn.GetFolders()):
     print(folder)
     idx = 0
-    for dataset in cxn.GetDatasets(folder):
+    for dataset in list(cxn.GetDatasets(folder))[:5]:
         idx += 1
         print('\t', dataset)
-        for version in cxn.GetDatasetVersions(folder,dataset):
+        for version in list(cxn.GetDatasetVersions(folder,dataset))[-4:-1]:
             print('\t\t', version)
         if idx >= 10: break # only list 10 datasets (takes too long)
 

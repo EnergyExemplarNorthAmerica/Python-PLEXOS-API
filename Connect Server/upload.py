@@ -11,7 +11,7 @@ Created on Mon Jun 05 11:36:46 2017
 import getpass, os, sys, clr
 from os.path import dirname, join
 
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -19,19 +19,26 @@ from PLEXOS7_NET.Core import PLEXOSConnect
 from EEUTILITY.Enums import *
 from System.IO import SearchOption
 
-server = input('Server:   ')
-username = input('Username: ')
-password = getpass.getpass('Password: ')
+server =   input('Server:          ')
+port =     input('Port (def:8888): ')
+try:
+    port = int(port)
+except:
+    port = 8888
+username = input('Username:        ')
+password = getpass.getpass('Password:        ')
+
+# connect to the PLEXOS Connect server
+cxn = PLEXOSConnect()
+cxn.DisplayAlerts = False
+cxn.Connection('Data Source={}:{};User Id={};Password={}'.format(server,port,username,password))
+
 folder = input('Folder:   ')
 dataset = input('Dataset:  ')
 
 if len(dataset) == 0:
     dataset = 'testdb'
     
-# connect to the PLEXOS Connect server
-cxn = PLEXOSConnect()
-cxn.Connection('Data Source={};User Id={};Password={}'.format(server,username,password))
-
 # verify that the dataset exists
 if not cxn.CheckDatasetExists(folder,dataset):
     '''

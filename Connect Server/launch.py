@@ -15,7 +15,7 @@ from datetime import datetime
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -24,19 +24,26 @@ import PLEXOS7_NET.Core as plx
 from EEUTILITY.Enums import *
 from System import *
 
-server = input('Server:   ')
-username = input('Username: ')
-password = getpass.getpass('Password: ')
+server =   input('Server:          ')
+port =     input('Port (def:8888): ')
+try:
+    port = int(port)
+except:
+    port = 8888
+username = input('Username:        ')
+password = getpass.getpass('Password:        ')
+
+# connect to the PLEXOS Connect server
+cxn = plx.PLEXOSConnect()
+cxn.DisplayAlerts = False
+cxn.Connection('Data Source={}:{};User Id={};Password={}'.format(server,port,username,password))
+
 folder = input('Folder:   ')
 dataset = input('Dataset:  ')
 jobset = input('Jobset:   ')
 
 if len(jobset) == 0:
     jobset = 'API{:%Y%m%d%H%M}'.format(datetime.now())
-
-# connect to the PLEXOS Connect server
-cxn = plx.PLEXOSConnect()
-cxn.Connection('Data Source={};User Id={};Password={}'.format(server,username,password))
 
 # verify that the dataset exists
 if cxn.CheckDatasetExists(folder,dataset):
