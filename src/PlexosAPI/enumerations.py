@@ -1,8 +1,9 @@
-from PlexosAPI.api import plx, plx_enums
+from PlexosAPI.api import plx_enums
 from enum import Enum
 
 
 class t_actionEnums(Enum):
+
     action_id_col = plx_enums.t_actionEnums.action_id_col
 
     action_symbol_col = plx_enums.t_actionEnums.action_symbol_col

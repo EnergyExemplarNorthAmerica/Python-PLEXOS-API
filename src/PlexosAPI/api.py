@@ -103,14 +103,16 @@ def generate_enums_python_code():
     """
     for key, values in get_all_enums_structure().items():
 
-        print('class ' + key + '(Enum):\n')
-        for val in values:
-            try:
-                atr = getattr('plx_enums.' + key, val)
-                print('\t' + val + ' = ' + str(atr) + '\n')
-            except AttributeError:
-                pass
-        print('\n\n')
+        if hasattr(plx_enums, key):
+            cls = getattr(plx_enums, key)
+
+            print('class ' + key + '(Enum):\n')
+            for val in values:
+                # print('\t' + val + ' = plx_enums.' + key + '.' + val)
+                if hasattr(cls, val):
+                    print('\t' + val + ' =', getattr(cls, val))
+
+            print('\n')
 
 # if you have run this script, you will notice that this is different
 # from the native behavior of a .NET Enum value .ToString() method call
@@ -128,9 +130,13 @@ def generate_enums_python_code():
 #
 # print(Enum.Parse(clr.GetClrType(plx_enums.ClassEnum), 'System'))  # prints 1
 
-print(get_method_list())
 
-print(get_enum_values())
+if __name__ == '__main__':
 
-enums_data = get_all_enums_structure()
-generate_enums_python_code()
+    print(get_method_list())
+
+    print(get_enum_values())
+
+    enums_data = get_all_enums_structure()
+
+    generate_enums_python_code()

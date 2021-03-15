@@ -1,4 +1,5 @@
-from PlexosAPI.api import plx, plx_enums
+from PlexosAPI.api import plx
+from PlexosAPI.enumerations import *
 
 
 class PlexosDatabase:
