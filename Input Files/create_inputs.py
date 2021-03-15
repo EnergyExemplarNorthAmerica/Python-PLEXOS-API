@@ -19,9 +19,10 @@ from PLEXOS7_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
 from System import Enum
 
-def add_plexos_prop(db, parent_class_id, child_class_id, collection_id, \
-                    parent_name, child_name, prop_name, prop_value, \
-                    category = ''):
+
+def add_plexos_prop(db, parent_class_id, child_class_id, collection_id,
+                    parent_name, child_name, prop_name, prop_value,
+                    category=''):
     '''
     Create a simple plexos object and populate some
     system properties.

@@ -19,7 +19,8 @@ nicer, but it isn't difficult in PythonNet.
 '''
 
 # First load the PLEXOS API
-import sys, clr
+import sys
+import clr
 sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
@@ -43,15 +44,15 @@ print(','.join([str(v) for v in clr.GetClrType(ClassEnum).GetEnumValues()]) + '\
 
 # suppose you need the string associated with a specific enum value
 # e.g., ClassEnum.System
-print (ClassEnum.System) # prints 1
-print (str(ClassEnum.System)) # prints 1
+print(ClassEnum.System)  # prints 1
+print(str(ClassEnum.System))  # prints 1
 
 # to get from the value to the text do the following
-print (clr.GetClrType(ClassEnum).GetEnumName(ClassEnum.System)) # prints System
+print(clr.GetClrType(ClassEnum).GetEnumName(ClassEnum.System))  # prints System
 
 # to get from the text to the value do the following
 from System import Enum
-print (Enum.Parse(clr.GetClrType(ClassEnum), 'System')) # prints 1
+print(Enum.Parse(clr.GetClrType(ClassEnum), 'System'))  # prints 1
 
 
 

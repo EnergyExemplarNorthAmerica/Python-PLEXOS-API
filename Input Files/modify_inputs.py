@@ -11,7 +11,11 @@ import os, sys, clr
 from shutil import copyfile
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+
+__program_files__ = os.environ["ProgramFiles(x86)"]
+__plexos_base_folder__ = os.path.join(__program_files__, 'Energy Exemplar', 'PLEXOS 8.0')
+
+sys.path.append(__plexos_base_folder__)
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -40,8 +44,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     	ClassEnum nClassId
     	)
     '''
-    db.CopyObject('Q1 DA','APIModel',ClassEnum.Model)
-    db.CopyObject('Q1 DA','APIHorizon',ClassEnum.Horizon)
+    db.CopyObject('Q1 DA', 'APIModel', ClassEnum.Model)
+    db.CopyObject('Q1 DA', 'APIHorizon', ClassEnum.Horizon)
     
     '''
     Int32 RemoveMembership(

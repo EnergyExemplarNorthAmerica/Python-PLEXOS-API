@@ -8,7 +8,10 @@ Created on Sat Sep 09 20:33:10 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+__program_files__ = os.environ["ProgramFiles(x86)"]
+__plexos_base_folder__ = os.path.join(__program_files__, 'Energy Exemplar', 'PLEXOS 8.0')
+
+sys.path.append(__plexos_base_folder__)
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -21,8 +24,8 @@ def list_enum_names(t):
         if t.IsEnum:
             text = '{}\n'.format(t.Name)
             names = t.GetEnumNames()
-            for idx in range(0,len(names),4):
-                for jdx in range(idx,min(len(names),idx+4)):
+            for idx in range(0, len(names), 4):
+                for jdx in range(idx, min(len(names), idx + 4)):
                     text += '\t{}'.format(names[jdx])
                 text += '\n'
         else:

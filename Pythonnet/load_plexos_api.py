@@ -39,7 +39,8 @@ clr.AddReference(...) # instead of load_assembly(...)
 Most other things are similar
 '''
 
-import sys, clr
+import sys
+import clr
 
 # instead of add_assemblies(...) do this
 sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
