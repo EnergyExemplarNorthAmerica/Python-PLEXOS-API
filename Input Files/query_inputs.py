@@ -10,7 +10,10 @@ Created on Sat Sep 09 19:19:57 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+__program_files__ = os.environ["ProgramFiles(x86)"]
+__plexos_base_folder__ = os.path.join(__program_files__, 'Energy Exemplar', 'PLEXOS 8.0')
+sys.path.append(__plexos_base_folder__)
+
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
