@@ -7,7 +7,9 @@ Created on Sat Sep 09 19:19:57 2017
 @author: Steven
 """
 
-import os, sys, clr
+import os
+import sys
+import clr
 
 # load PLEXOS assemblies
 sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')

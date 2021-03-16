@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from PlexosAPI.api import plx, plx_enums
 from PlexosAPI.enumerations import CollectionEnum
@@ -10,15 +11,31 @@ def format_property(val):
 class PlexosDatabase:
 
     def __init__(self, file_name):
+        """
+        Database constructor, it opens or creates a Plexos DataBase
+        :param file_name: Plexos .xml file name
+        """
 
+        # file name
         self.file_name = file_name
 
+        # database connection
         self.db = plx.DatabaseCore()
 
+        if not os.path.exists(self.file_name):
+
+            # if the file does not exist, create the DB, and do not overwrite
+            self.db.NewEmptyDatabase(self.file_name, False)
+
+        # connect the database
         self.db.Connection(self.file_name)
 
     def get_collection_names(self, collection):
-
+        """
+        Get list of named of the objects in a collection
+        :param collection: value from CollectionEnum
+        :return: list of strings
+        """
         obj = self.db.GetObjects(collection)
         if obj is not None:
             return [gen for gen in obj]
@@ -26,6 +43,12 @@ class PlexosDatabase:
             return list()
 
     def get_record_set(self, collection, child_name_list):
+        """
+        Get record set for a collection
+        :param collection: value from CollectionEnum
+        :param child_name_list: lis of object names or simply the object name
+        :return: record set
+        """
 
         '''
         Recordset GetPropertiesTable(CollectionEnum CollectionId,

@@ -83,7 +83,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     '''
     
     # parameters
-    mem_id = db.GetMembershipID(CollectionEnum.SystemFuels,'System','NG/CT')
+    mem_id = db.GetMembershipID(CollectionEnum.SystemFuels, 'System', 'NG/CT')
     enum_id = int(SystemFuelsEnum.Price) 
     
     # we'll add three property rows... monthly gas prices for 3 months
