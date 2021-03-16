@@ -7,17 +7,17 @@ db = PlexosDatabase(file_name=file_name, force_new=True)
 
 db.add_region('R1')
 
-db.add_node('bus1', 'R1')
-db.add_node('bus2', 'R1')
-db.add_node('bus3', 'R1')
-db.add_node('bus4', 'R1')
-db.add_node('bus5', 'R1')
+db.add_node('bus1', region='R1', V=10, P=0, Pmax=30, category='Nodes')
+db.add_node('bus2', region='R1', V=10, P=0, Pmax=999, category='Nodes')
+db.add_node('bus3', region='R1', V=10, P=0, Pmax=999, category='Nodes')
+db.add_node('bus4', region='R1', V=10, P=10, Pmax=999, category='Nodes')
+db.add_node('bus5', region='R1', V=10, P=30, Pmax=999, category='Nodes')
 
-db.add_line('bus1', 'bus2', 'L1_2', 100, 0.001, 0.05, 0.002)
+db.add_line('bus1', 'bus2', name='L1_2', rate=100, r=0.001, x=0.05, b=0.002)
 
-db.add_generator('bus1', 'G1', 1, 50, 1.5, 10, 'Gas')
-db.add_generator('bus2', 'G2', 1, 20, 1.5, 10, 'Gas')
-db.add_generator('bus3', 'G3', 1, 50, 3.0, 10, 'Fuel')
+db.add_generator('bus1', name='G1', units=1, max_capacity=50, fuel_price=10.5, heat_rate=10, category='Gas')
+db.add_generator('bus2', name='G2', units=1, max_capacity=20, fuel_price=10.5, heat_rate=10, category='Gas')
+db.add_generator('bus3', name='G3', units=1, max_capacity=50, fuel_price=3.0, heat_rate=8, category='Fuel')
 
 
 db.close()

@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from PlexosAPI.api import plx, Enum, clr, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum
+from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum
 
 
 class PlexosDatabase:
@@ -134,9 +134,8 @@ class PlexosDatabase:
 
     def add_region(self, name):
         """
-
-        :param name:
-        :return:
+        Add Region
+        :param name: region name
         """
         add_plexos_prop(db=self.db,
                         parent_class_id=ClassEnum.System,
@@ -147,23 +146,33 @@ class PlexosDatabase:
                         prop_name='Load',
                         prop_value=0)
 
-    def add_node(self, name, region_name):
+    def add_node(self, name, region=None, zone=None, V=1, P=None, Pmax=None, category='Nodes'):
         """
-
-        :param name:
-        :param region_name:
-        :return:
+        Add node to Database
+        :param name: Node name
+        :param region: Node Region
+        :param zone: Node Zone
+        :param V: Nominal voltage (kV)
+        :param P: Fixed power (MW)
+        :param Pmax: Maximum injection power (MW)
+        :param category: Node category
         """
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Node,
-                        collection_id=CollectionEnum.SystemNodes,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Load Participation Factor',
-                        prop_value=1)
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
+                        'System', name, 'Voltage', V, category)
 
-        self.db.AddMembership(CollectionEnum.NodeRegion, name, region_name)
+        if P is not None:
+            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
+                            'System', name, 'Fixed Load', P, category)
+
+        if Pmax is not None:
+            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
+                            'System', name, 'Max Net Injection', Pmax, category)
+
+        if region is not None:
+            self.db.AddMembership(CollectionEnum.NodeRegion, name, region)
+
+        if zone is not None:
+            self.db.AddMembership(CollectionEnum.NodeZone, name, zone)
 
     def add_generator(self, node, name, units=1, max_capacity=9999, fuel_price=1, heat_rate=1, category='Thermal'):
         """
@@ -179,10 +188,13 @@ class PlexosDatabase:
         """
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
                         'System', name, 'Units', units, category)
+
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
                         'System', name, 'Max Capacity', max_capacity)
+
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
                         'System', name, 'Fuel Price', fuel_price)
+
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
                         'System', name, 'Heat Rate', heat_rate)
 
