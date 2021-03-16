@@ -61,12 +61,12 @@ def generate_database_code():
     :return: Nothing, it prints on the console
     """
 
-    template = '''    def get_{0}_df(self):
+    template = '''    def get_{0}_df(self, pivot_values=False):
         """
         Get table of {1} records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.{2})
+        return self.get_collection_df(plx_enums.CollectionEnum.{2}, pivot_values)
     '''
     import re
 

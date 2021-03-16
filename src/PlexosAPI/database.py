@@ -1,34 +1,56 @@
 import os
 import pandas as pd
-from PlexosAPI.api import plx, plx_enums
-from PlexosAPI.enumerations import CollectionEnum
-
-
-def format_property(val):
-    return val.replace('_x0020', '')
+from PlexosAPI.api import plx, Enum, clr, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum
 
 
 class PlexosDatabase:
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, output_folder='.', model_name='Base', force_new=False):
         """
         Database constructor, it opens or creates a Plexos DataBase
         :param file_name: Plexos .xml file name
+        :param output_folder:
+        :param model_name:
         """
 
         # file name
         self.file_name = file_name
 
+        # set the output folder
+        if output_folder is None:
+            self.output_folder = os.path.dirname(self.file_name)
+        else:
+            self.output_folder = output_folder
+
+        # the model internal name
+        self.model_name = model_name
+
         # database connection
         self.db = plx.DatabaseCore()
 
-        if not os.path.exists(self.file_name):
+        if not os.path.exists(self.file_name) or force_new:
 
             # if the file does not exist, create the DB, and do not overwrite
-            self.db.NewEmptyDatabase(self.file_name, False)
+            self.db.NewEmptyDatabase(self.file_name, force_new)
 
         # connect the database
         self.db.Connection(self.file_name)
+
+    def close(self):
+        """
+        Close and save the DataBase
+        :return:
+        """
+        self.db.Close()
+
+    def run(self):
+        """
+        Run model and print the logs while it lasts
+        :return: Nothing
+        """
+        run_model(self.file_name, self.output_folder, self.model_name)
+        for res in parse_logfile('ST Schedule Completed', self.output_folder, self.model_name, 25):
+            print(res)
 
     def get_collection_names(self, collection):
         """
@@ -69,9 +91,10 @@ class PlexosDatabase:
     def get_list_of_records_dictionary(record_set: "ADODB.RecordsetClass"):
         """
         Get list of dictionaries with the records' data
-        :param record_set: .Net ADODB recordset
+        :param record_set: .Net ADODB record set
         :return: list of dictionaries with the properties and values
         """
+
         data = list()
 
         # go to the record first value
@@ -82,15 +105,16 @@ class PlexosDatabase:
             fileds = [x.Name for x in record_set.Fields]
             while not record_set.EOF:
                 values = [x.Value for x in record_set.Fields]
-                data.append({format_property(f): d for f, d in zip(fileds, values)})
+                data.append({f.replace('_x0020', ''): d for f, d in zip(fileds, values)})
                 record_set.MoveNext()
 
         return data
 
-    def get_collection_df(self, collection):
+    def get_collection_df(self, collection, pivot_values=False):
         """
         Get the DataFrame with the data of a collection
-        :param collection: i.e.: plx_enums.CollectionEnum.SystemGenerators
+        :param collection: i.e.: CollectionEnum.SystemGenerators
+        :param pivot_values: if true, the table is converted to a DataFrame pivoted around the properties
         :return: DataFrame
         """
         names = self.get_collection_names(collection)
@@ -99,3188 +123,3350 @@ class PlexosDatabase:
             record_set = self.get_record_set(collection, names)
 
             data = self.get_list_of_records_dictionary(record_set)
-            return pd.DataFrame(data)
+
+            if pivot_values:
+                df = pd.DataFrame(data)
+                return pd.pivot_table(df, values='Value', index='Child_Object', columns='Property', aggfunc='max')
+            else:
+                return pd.DataFrame(data)
         else:
             return None
 
-    def get_system_generators_df(self):
+    def add_region(self, name):
+        """
+
+        :param name:
+        :return:
+        """
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Region,
+                        collection_id=CollectionEnum.SystemRegions,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Load',
+                        prop_value=0)
+
+    def add_node(self, name, region_name):
+        """
+
+        :param name:
+        :param region_name:
+        :return:
+        """
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Node,
+                        collection_id=CollectionEnum.SystemNodes,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Load Participation Factor',
+                        prop_value=1)
+
+        self.db.AddMembership(CollectionEnum.NodeRegion, name, region_name)
+
+    def add_generator(self, node, name, units=1, max_capacity=9999, fuel_price=1, heat_rate=1, category='Thermal'):
+        """
+
+        :param node:
+        :param name:
+        :param units:
+        :param max_capacity:
+        :param fuel_price:
+        :param heat_rate:
+        :param category:
+        :return:
+        """
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
+                        'System', name, 'Units', units, category)
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
+                        'System', name, 'Max Capacity', max_capacity)
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
+                        'System', name, 'Fuel Price', fuel_price)
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
+                        'System', name, 'Heat Rate', heat_rate)
+
+        self.db.AddMembership(CollectionEnum.GeneratorNodes, name, node)
+
+    def add_line(self, node_from, node_to, name, rate, r, x, b):
+        """
+        Add line to the Database
+        :param node_from: name of the node from
+        :param node_to: name of the node to
+        :param name: name of the line
+        :param rate: Rating (MW)
+        :param r: Resistence (p.u.)
+        :param x: Reactance (p.u.)
+        :param b: Susceptance (p.u.)
+        :return:
+        """
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Line,
+                        collection_id=CollectionEnum.SystemLines,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Max Flow',
+                        prop_value=rate)
+
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Line,
+                        collection_id=CollectionEnum.SystemLines,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Resistance',
+                        prop_value=r)
+
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Line,
+                        collection_id=CollectionEnum.SystemLines,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Reactance',
+                        prop_value=x)
+
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Line,
+                        collection_id=CollectionEnum.SystemLines,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Susceptance',
+                        prop_value=b)
+
+        self.db.AddMembership(CollectionEnum.LineNodeFrom, name, node_from)
+        self.db.AddMembership(CollectionEnum.LineNodeTo, name, node_to)
+
+    def add_transformer(self, node_from, node_to, name, rate, r, x, b):
+        """
+        Add transformer to the Database
+        :param node_from: name of the node from
+        :param node_to: name of the node to
+        :param name: name of the line
+        :param rate: Rating (MW)
+        :param r: Resistence (p.u.)
+        :param x: Reactance (p.u.)
+        :param b: Susceptance (p.u.)
+        :return:
+        """
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Transformer,
+                        collection_id=CollectionEnum.SystemTransformers,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Max Flow',
+                        prop_value=rate)
+
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Transformer,
+                        collection_id=CollectionEnum.SystemTransformers,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Resistance',
+                        prop_value=r)
+
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Transformer,
+                        collection_id=CollectionEnum.SystemTransformers,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Reactance',
+                        prop_value=x)
+
+        add_plexos_prop(db=self.db,
+                        parent_class_id=ClassEnum.System,
+                        child_class_id=ClassEnum.Transformer,
+                        collection_id=CollectionEnum.SystemTransformers,
+                        parent_name='System',
+                        child_name=name,
+                        prop_name='Susceptance',
+                        prop_value=b)
+
+        self.db.AddMembership(CollectionEnum.TransformerNodeFrom, name, node_from)
+        self.db.AddMembership(CollectionEnum.TransformerNodeTo, name, node_to)
+
+    def get_system_generators_df(self, pivot_values=False):
         """
         Get table of SystemGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGenerators)
+        return self.get_collection_df(CollectionEnum.SystemGenerators, pivot_values)
 
-    def get_system_fuels_df(self):
+    def get_system_fuels_df(self, pivot_values=False):
         """
         Get table of SystemFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemFuels)
+        return self.get_collection_df(CollectionEnum.SystemFuels, pivot_values)
 
-    def get_system_fuel_contracts_df(self):
+    def get_system_fuel_contracts_df(self, pivot_values=False):
         """
         Get table of SystemFuelContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemFuelContracts)
+        return self.get_collection_df(CollectionEnum.SystemFuelContracts, pivot_values)
 
-    def get_system_emissions_df(self):
+    def get_system_emissions_df(self, pivot_values=False):
         """
         Get table of SystemEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemEmissions)
+        return self.get_collection_df(CollectionEnum.SystemEmissions, pivot_values)
 
-    def get_system_abatements_df(self):
+    def get_system_abatements_df(self, pivot_values=False):
         """
         Get table of SystemAbatements records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemAbatements)
+        return self.get_collection_df(CollectionEnum.SystemAbatements, pivot_values)
 
-    def get_system_storages_df(self):
+    def get_system_storages_df(self, pivot_values=False):
         """
         Get table of SystemStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemStorages)
+        return self.get_collection_df(CollectionEnum.SystemStorages, pivot_values)
 
-    def get_system_waterways_df(self):
+    def get_system_waterways_df(self, pivot_values=False):
         """
         Get table of SystemWaterways records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterways)
+        return self.get_collection_df(CollectionEnum.SystemWaterways, pivot_values)
 
-    def get_system_power_stations_df(self):
+    def get_system_power_stations_df(self, pivot_values=False):
         """
         Get table of SystemPowerStations records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemPowerStations)
+        return self.get_collection_df(CollectionEnum.SystemPowerStations, pivot_values)
 
-    def get_system_physical_contracts_df(self):
+    def get_system_physical_contracts_df(self, pivot_values=False):
         """
         Get table of SystemPhysicalContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemPhysicalContracts)
+        return self.get_collection_df(CollectionEnum.SystemPhysicalContracts, pivot_values)
 
-    def get_system_purchasers_df(self):
+    def get_system_purchasers_df(self, pivot_values=False):
         """
         Get table of SystemPurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemPurchasers)
+        return self.get_collection_df(CollectionEnum.SystemPurchasers, pivot_values)
 
-    def get_system_reserves_df(self):
+    def get_system_reserves_df(self, pivot_values=False):
         """
         Get table of SystemReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemReserves)
+        return self.get_collection_df(CollectionEnum.SystemReserves, pivot_values)
 
-    def get_system_batteries_df(self):
+    def get_system_batteries_df(self, pivot_values=False):
         """
         Get table of SystemBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemBatteries)
+        return self.get_collection_df(CollectionEnum.SystemBatteries, pivot_values)
 
-    def get_system_maintenances_df(self):
+    def get_system_maintenances_df(self, pivot_values=False):
         """
         Get table of SystemMaintenances records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemMaintenances)
+        return self.get_collection_df(CollectionEnum.SystemMaintenances, pivot_values)
 
-    def get_system_heat_plants_df(self):
+    def get_system_heat_plants_df(self, pivot_values=False):
         """
         Get table of SystemHeatPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemHeatPlants)
+        return self.get_collection_df(CollectionEnum.SystemHeatPlants, pivot_values)
 
-    def get_system_heat_nodes_df(self):
+    def get_system_heat_nodes_df(self, pivot_values=False):
         """
         Get table of SystemHeatNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemHeatNodes)
+        return self.get_collection_df(CollectionEnum.SystemHeatNodes, pivot_values)
 
-    def get_system_gas_fields_df(self):
+    def get_system_gas_fields_df(self, pivot_values=False):
         """
         Get table of SystemGasFields records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasFields)
+        return self.get_collection_df(CollectionEnum.SystemGasFields, pivot_values)
 
-    def get_system_gas_plants_df(self):
+    def get_system_gas_plants_df(self, pivot_values=False):
         """
         Get table of SystemGasPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasPlants)
+        return self.get_collection_df(CollectionEnum.SystemGasPlants, pivot_values)
 
-    def get_system_gas_pipelines_df(self):
+    def get_system_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of SystemGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasPipelines)
+        return self.get_collection_df(CollectionEnum.SystemGasPipelines, pivot_values)
 
-    def get_system_gas_nodes_df(self):
+    def get_system_gas_nodes_df(self, pivot_values=False):
         """
         Get table of SystemGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasNodes)
+        return self.get_collection_df(CollectionEnum.SystemGasNodes, pivot_values)
 
-    def get_system_gas_storages_df(self):
+    def get_system_gas_storages_df(self, pivot_values=False):
         """
         Get table of SystemGasStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasStorages)
+        return self.get_collection_df(CollectionEnum.SystemGasStorages, pivot_values)
 
-    def get_system_gas_demands_df(self):
+    def get_system_gas_demands_df(self, pivot_values=False):
         """
         Get table of SystemGasDemands records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasDemands)
+        return self.get_collection_df(CollectionEnum.SystemGasDemands, pivot_values)
 
-    def get_system_gas_basins_df(self):
+    def get_system_gas_basins_df(self, pivot_values=False):
         """
         Get table of SystemGasBasins records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasBasins)
+        return self.get_collection_df(CollectionEnum.SystemGasBasins, pivot_values)
 
-    def get_system_gas_zones_df(self):
+    def get_system_gas_zones_df(self, pivot_values=False):
         """
         Get table of SystemGasZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasZones)
+        return self.get_collection_df(CollectionEnum.SystemGasZones, pivot_values)
 
-    def get_system_gas_contracts_df(self):
+    def get_system_gas_contracts_df(self, pivot_values=False):
         """
         Get table of SystemGasContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasContracts)
+        return self.get_collection_df(CollectionEnum.SystemGasContracts, pivot_values)
 
-    def get_system_gas_transports_df(self):
+    def get_system_gas_transports_df(self, pivot_values=False):
         """
         Get table of SystemGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGasTransports)
+        return self.get_collection_df(CollectionEnum.SystemGasTransports, pivot_values)
 
-    def get_system_water_plants_df(self):
+    def get_system_water_plants_df(self, pivot_values=False):
         """
         Get table of SystemWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterPlants)
+        return self.get_collection_df(CollectionEnum.SystemWaterPlants, pivot_values)
 
-    def get_system_water_pipelines_df(self):
+    def get_system_water_pipelines_df(self, pivot_values=False):
         """
         Get table of SystemWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterPipelines)
+        return self.get_collection_df(CollectionEnum.SystemWaterPipelines, pivot_values)
 
-    def get_system_water_nodes_df(self):
+    def get_system_water_nodes_df(self, pivot_values=False):
         """
         Get table of SystemWaterNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterNodes)
+        return self.get_collection_df(CollectionEnum.SystemWaterNodes, pivot_values)
 
-    def get_system_water_storages_df(self):
+    def get_system_water_storages_df(self, pivot_values=False):
         """
         Get table of SystemWaterStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterStorages)
+        return self.get_collection_df(CollectionEnum.SystemWaterStorages, pivot_values)
 
-    def get_system_water_demands_df(self):
+    def get_system_water_demands_df(self, pivot_values=False):
         """
         Get table of SystemWaterDemands records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterDemands)
+        return self.get_collection_df(CollectionEnum.SystemWaterDemands, pivot_values)
 
-    def get_system_water_zones_df(self):
+    def get_system_water_zones_df(self, pivot_values=False):
         """
         Get table of SystemWaterZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemWaterZones)
+        return self.get_collection_df(CollectionEnum.SystemWaterZones, pivot_values)
 
-    def get_system_regions_df(self):
+    def get_system_regions_df(self, pivot_values=False):
         """
         Get table of SystemRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemRegions)
+        return self.get_collection_df(CollectionEnum.SystemRegions, pivot_values)
 
-    def get_system_zones_df(self):
+    def get_system_zones_df(self, pivot_values=False):
         """
         Get table of SystemZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemZones)
+        return self.get_collection_df(CollectionEnum.SystemZones, pivot_values)
 
-    def get_system_nodes_df(self):
+    def get_system_nodes_df(self, pivot_values=False):
         """
         Get table of SystemNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemNodes)
+        return self.get_collection_df(CollectionEnum.SystemNodes, pivot_values)
 
-    def get_system_lines_df(self):
+    def get_system_lines_df(self, pivot_values=False):
         """
         Get table of SystemLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemLines)
+        return self.get_collection_df(CollectionEnum.SystemLines, pivot_values)
 
-    def get_system_ml_fs_df(self):
+    def get_system_ml_fs_df(self, pivot_values=False):
         """
         Get table of SystemMLFs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemMLFs)
+        return self.get_collection_df(CollectionEnum.SystemMLFs, pivot_values)
 
-    def get_system_transformers_df(self):
+    def get_system_transformers_df(self, pivot_values=False):
         """
         Get table of SystemTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemTransformers)
+        return self.get_collection_df(CollectionEnum.SystemTransformers, pivot_values)
 
-    def get_system_flow_controls_df(self):
+    def get_system_flow_controls_df(self, pivot_values=False):
         """
         Get table of SystemFlowControls records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemFlowControls)
+        return self.get_collection_df(CollectionEnum.SystemFlowControls, pivot_values)
 
-    def get_system_interfaces_df(self):
+    def get_system_interfaces_df(self, pivot_values=False):
         """
         Get table of SystemInterfaces records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemInterfaces)
+        return self.get_collection_df(CollectionEnum.SystemInterfaces, pivot_values)
 
-    def get_system_contingencies_df(self):
+    def get_system_contingencies_df(self, pivot_values=False):
         """
         Get table of SystemContingencies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemContingencies)
+        return self.get_collection_df(CollectionEnum.SystemContingencies, pivot_values)
 
-    def get_system_companies_df(self):
+    def get_system_companies_df(self, pivot_values=False):
         """
         Get table of SystemCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemCompanies)
+        return self.get_collection_df(CollectionEnum.SystemCompanies, pivot_values)
 
-    def get_system_financial_contracts_df(self):
+    def get_system_financial_contracts_df(self, pivot_values=False):
         """
         Get table of SystemFinancialContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemFinancialContracts)
+        return self.get_collection_df(CollectionEnum.SystemFinancialContracts, pivot_values)
 
-    def get_system_hubs_df(self):
+    def get_system_hubs_df(self, pivot_values=False):
         """
         Get table of SystemHubs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemHubs)
+        return self.get_collection_df(CollectionEnum.SystemHubs, pivot_values)
 
-    def get_system_transmission_rights_df(self):
+    def get_system_transmission_rights_df(self, pivot_values=False):
         """
         Get table of SystemTransmissionRights records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemTransmissionRights)
+        return self.get_collection_df(CollectionEnum.SystemTransmissionRights, pivot_values)
 
-    def get_system_cournots_df(self):
+    def get_system_cournots_df(self, pivot_values=False):
         """
         Get table of SystemCournots records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemCournots)
+        return self.get_collection_df(CollectionEnum.SystemCournots, pivot_values)
 
-    def get_system_rs_is_df(self):
+    def get_system_rs_is_df(self, pivot_values=False):
         """
         Get table of SystemRSIs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemRSIs)
+        return self.get_collection_df(CollectionEnum.SystemRSIs, pivot_values)
 
-    def get_system_markets_df(self):
+    def get_system_markets_df(self, pivot_values=False):
         """
         Get table of SystemMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemMarkets)
+        return self.get_collection_df(CollectionEnum.SystemMarkets, pivot_values)
 
-    def get_system_constraints_df(self):
+    def get_system_constraints_df(self, pivot_values=False):
         """
         Get table of SystemConstraints records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemConstraints)
+        return self.get_collection_df(CollectionEnum.SystemConstraints, pivot_values)
 
-    def get_system_decision_variables_df(self):
+    def get_system_decision_variables_df(self, pivot_values=False):
         """
         Get table of SystemDecisionVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemDecisionVariables)
+        return self.get_collection_df(CollectionEnum.SystemDecisionVariables, pivot_values)
 
-    def get_system_lists_df(self):
+    def get_system_lists_df(self, pivot_values=False):
         """
         Get table of SystemLists records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemLists)
+        return self.get_collection_df(CollectionEnum.SystemLists, pivot_values)
 
-    def get_system_data_files_df(self):
+    def get_system_data_files_df(self, pivot_values=False):
         """
         Get table of SystemDataFiles records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemDataFiles)
+        return self.get_collection_df(CollectionEnum.SystemDataFiles, pivot_values)
 
-    def get_system_variables_df(self):
+    def get_system_variables_df(self, pivot_values=False):
         """
         Get table of SystemVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemVariables)
+        return self.get_collection_df(CollectionEnum.SystemVariables, pivot_values)
 
-    def get_system_timeslices_df(self):
+    def get_system_timeslices_df(self, pivot_values=False):
         """
         Get table of SystemTimeslices records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemTimeslices)
+        return self.get_collection_df(CollectionEnum.SystemTimeslices, pivot_values)
 
-    def get_system_globals_df(self):
+    def get_system_globals_df(self, pivot_values=False):
         """
         Get table of SystemGlobals records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemGlobals)
+        return self.get_collection_df(CollectionEnum.SystemGlobals, pivot_values)
 
-    def get_system_scenarios_df(self):
+    def get_system_scenarios_df(self, pivot_values=False):
         """
         Get table of SystemScenarios records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemScenarios)
+        return self.get_collection_df(CollectionEnum.SystemScenarios, pivot_values)
 
-    def get_system_models_df(self):
+    def get_system_models_df(self, pivot_values=False):
         """
         Get table of SystemModels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemModels)
+        return self.get_collection_df(CollectionEnum.SystemModels, pivot_values)
 
-    def get_system_projects_df(self):
+    def get_system_projects_df(self, pivot_values=False):
         """
         Get table of SystemProjects records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemProjects)
+        return self.get_collection_df(CollectionEnum.SystemProjects, pivot_values)
 
-    def get_system_horizons_df(self):
+    def get_system_horizons_df(self, pivot_values=False):
         """
         Get table of SystemHorizons records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemHorizons)
+        return self.get_collection_df(CollectionEnum.SystemHorizons, pivot_values)
 
-    def get_system_reports_df(self):
+    def get_system_reports_df(self, pivot_values=False):
         """
         Get table of SystemReports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemReports)
+        return self.get_collection_df(CollectionEnum.SystemReports, pivot_values)
 
-    def get_system_lt_plan_df(self):
+    def get_system_lt_plan_df(self, pivot_values=False):
         """
         Get table of SystemLTPlan records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemLTPlan)
+        return self.get_collection_df(CollectionEnum.SystemLTPlan, pivot_values)
 
-    def get_system_pasa_df(self):
+    def get_system_pasa_df(self, pivot_values=False):
         """
         Get table of SystemPASA records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemPASA)
+        return self.get_collection_df(CollectionEnum.SystemPASA, pivot_values)
 
-    def get_system_mt_schedule_df(self):
+    def get_system_mt_schedule_df(self, pivot_values=False):
         """
         Get table of SystemMTSchedule records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemMTSchedule)
+        return self.get_collection_df(CollectionEnum.SystemMTSchedule, pivot_values)
 
-    def get_system_st_schedule_df(self):
+    def get_system_st_schedule_df(self, pivot_values=False):
         """
         Get table of SystemSTSchedule records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemSTSchedule)
+        return self.get_collection_df(CollectionEnum.SystemSTSchedule, pivot_values)
 
-    def get_system_transmission_df(self):
+    def get_system_transmission_df(self, pivot_values=False):
         """
         Get table of SystemTransmission records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemTransmission)
+        return self.get_collection_df(CollectionEnum.SystemTransmission, pivot_values)
 
-    def get_system_production_df(self):
+    def get_system_production_df(self, pivot_values=False):
         """
         Get table of SystemProduction records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemProduction)
+        return self.get_collection_df(CollectionEnum.SystemProduction, pivot_values)
 
-    def get_system_competition_df(self):
+    def get_system_competition_df(self, pivot_values=False):
         """
         Get table of SystemCompetition records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemCompetition)
+        return self.get_collection_df(CollectionEnum.SystemCompetition, pivot_values)
 
-    def get_system_stochastic_df(self):
+    def get_system_stochastic_df(self, pivot_values=False):
         """
         Get table of SystemStochastic records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemStochastic)
+        return self.get_collection_df(CollectionEnum.SystemStochastic, pivot_values)
 
-    def get_system_performance_df(self):
+    def get_system_performance_df(self, pivot_values=False):
         """
         Get table of SystemPerformance records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemPerformance)
+        return self.get_collection_df(CollectionEnum.SystemPerformance, pivot_values)
 
-    def get_system_diagnostics_df(self):
+    def get_system_diagnostics_df(self, pivot_values=False):
         """
         Get table of SystemDiagnostics records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.SystemDiagnostics)
+        return self.get_collection_df(CollectionEnum.SystemDiagnostics, pivot_values)
 
-    def get_generator_template_df(self):
+    def get_generator_template_df(self, pivot_values=False):
         """
         Get table of GeneratorTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorTemplate)
+        return self.get_collection_df(CollectionEnum.GeneratorTemplate, pivot_values)
 
-    def get_fuel_template_df(self):
+    def get_fuel_template_df(self, pivot_values=False):
         """
         Get table of FuelTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelTemplate)
+        return self.get_collection_df(CollectionEnum.FuelTemplate, pivot_values)
 
-    def get_fuel_contract_template_df(self):
+    def get_fuel_contract_template_df(self, pivot_values=False):
         """
         Get table of FuelContractTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelContractTemplate)
+        return self.get_collection_df(CollectionEnum.FuelContractTemplate, pivot_values)
 
-    def get_emission_template_df(self):
+    def get_emission_template_df(self, pivot_values=False):
         """
         Get table of EmissionTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.EmissionTemplate)
+        return self.get_collection_df(CollectionEnum.EmissionTemplate, pivot_values)
 
-    def get_abatement_template_df(self):
+    def get_abatement_template_df(self, pivot_values=False):
         """
         Get table of AbatementTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.AbatementTemplate)
+        return self.get_collection_df(CollectionEnum.AbatementTemplate, pivot_values)
 
-    def get_storage_template_df(self):
+    def get_storage_template_df(self, pivot_values=False):
         """
         Get table of StorageTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.StorageTemplate)
+        return self.get_collection_df(CollectionEnum.StorageTemplate, pivot_values)
 
-    def get_waterway_template_df(self):
+    def get_waterway_template_df(self, pivot_values=False):
         """
         Get table of WaterwayTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterwayTemplate)
+        return self.get_collection_df(CollectionEnum.WaterwayTemplate, pivot_values)
 
-    def get_power_station_template_df(self):
+    def get_power_station_template_df(self, pivot_values=False):
         """
         Get table of PowerStationTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PowerStationTemplate)
+        return self.get_collection_df(CollectionEnum.PowerStationTemplate, pivot_values)
 
-    def get_physical_contract_template_df(self):
+    def get_physical_contract_template_df(self, pivot_values=False):
         """
         Get table of PhysicalContractTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PhysicalContractTemplate)
+        return self.get_collection_df(CollectionEnum.PhysicalContractTemplate, pivot_values)
 
-    def get_purchaser_template_df(self):
+    def get_purchaser_template_df(self, pivot_values=False):
         """
         Get table of PurchaserTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PurchaserTemplate)
+        return self.get_collection_df(CollectionEnum.PurchaserTemplate, pivot_values)
 
-    def get_reserve_template_df(self):
+    def get_reserve_template_df(self, pivot_values=False):
         """
         Get table of ReserveTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveTemplate)
+        return self.get_collection_df(CollectionEnum.ReserveTemplate, pivot_values)
 
-    def get_battery_template_df(self):
+    def get_battery_template_df(self, pivot_values=False):
         """
         Get table of BatteryTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.BatteryTemplate)
+        return self.get_collection_df(CollectionEnum.BatteryTemplate, pivot_values)
 
-    def get_maintenance_template_df(self):
+    def get_maintenance_template_df(self, pivot_values=False):
         """
         Get table of MaintenanceTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MaintenanceTemplate)
+        return self.get_collection_df(CollectionEnum.MaintenanceTemplate, pivot_values)
 
-    def get_heat_plant_template_df(self):
+    def get_heat_plant_template_df(self, pivot_values=False):
         """
         Get table of HeatPlantTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatPlantTemplate)
+        return self.get_collection_df(CollectionEnum.HeatPlantTemplate, pivot_values)
 
-    def get_heat_node_template_df(self):
+    def get_heat_node_template_df(self, pivot_values=False):
         """
         Get table of HeatNodeTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatNodeTemplate)
+        return self.get_collection_df(CollectionEnum.HeatNodeTemplate, pivot_values)
 
-    def get_gas_field_template_df(self):
+    def get_gas_field_template_df(self, pivot_values=False):
         """
         Get table of GasFieldTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasFieldTemplate)
+        return self.get_collection_df(CollectionEnum.GasFieldTemplate, pivot_values)
 
-    def get_gas_plant_template_df(self):
+    def get_gas_plant_template_df(self, pivot_values=False):
         """
         Get table of GasPlantTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPlantTemplate)
+        return self.get_collection_df(CollectionEnum.GasPlantTemplate, pivot_values)
 
-    def get_gas_pipeline_template_df(self):
+    def get_gas_pipeline_template_df(self, pivot_values=False):
         """
         Get table of GasPipelineTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPipelineTemplate)
+        return self.get_collection_df(CollectionEnum.GasPipelineTemplate, pivot_values)
 
-    def get_gas_node_template_df(self):
+    def get_gas_node_template_df(self, pivot_values=False):
         """
         Get table of GasNodeTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasNodeTemplate)
+        return self.get_collection_df(CollectionEnum.GasNodeTemplate, pivot_values)
 
-    def get_gas_storage_template_df(self):
+    def get_gas_storage_template_df(self, pivot_values=False):
         """
         Get table of GasStorageTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasStorageTemplate)
+        return self.get_collection_df(CollectionEnum.GasStorageTemplate, pivot_values)
 
-    def get_gas_demand_template_df(self):
+    def get_gas_demand_template_df(self, pivot_values=False):
         """
         Get table of GasDemandTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasDemandTemplate)
+        return self.get_collection_df(CollectionEnum.GasDemandTemplate, pivot_values)
 
-    def get_gas_basin_template_df(self):
+    def get_gas_basin_template_df(self, pivot_values=False):
         """
         Get table of GasBasinTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasBasinTemplate)
+        return self.get_collection_df(CollectionEnum.GasBasinTemplate, pivot_values)
 
-    def get_gas_zone_template_df(self):
+    def get_gas_zone_template_df(self, pivot_values=False):
         """
         Get table of GasZoneTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneTemplate)
+        return self.get_collection_df(CollectionEnum.GasZoneTemplate, pivot_values)
 
-    def get_gas_contract_template_df(self):
+    def get_gas_contract_template_df(self, pivot_values=False):
         """
         Get table of GasContractTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasContractTemplate)
+        return self.get_collection_df(CollectionEnum.GasContractTemplate, pivot_values)
 
-    def get_water_plant_template_df(self):
+    def get_water_plant_template_df(self, pivot_values=False):
         """
         Get table of WaterPlantTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPlantTemplate)
+        return self.get_collection_df(CollectionEnum.WaterPlantTemplate, pivot_values)
 
-    def get_water_pipeline_template_df(self):
+    def get_water_pipeline_template_df(self, pivot_values=False):
         """
         Get table of WaterPipelineTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPipelineTemplate)
+        return self.get_collection_df(CollectionEnum.WaterPipelineTemplate, pivot_values)
 
-    def get_water_node_template_df(self):
+    def get_water_node_template_df(self, pivot_values=False):
         """
         Get table of WaterNodeTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterNodeTemplate)
+        return self.get_collection_df(CollectionEnum.WaterNodeTemplate, pivot_values)
 
-    def get_water_storage_template_df(self):
+    def get_water_storage_template_df(self, pivot_values=False):
         """
         Get table of WaterStorageTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterStorageTemplate)
+        return self.get_collection_df(CollectionEnum.WaterStorageTemplate, pivot_values)
 
-    def get_water_demand_template_df(self):
+    def get_water_demand_template_df(self, pivot_values=False):
         """
         Get table of WaterDemandTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterDemandTemplate)
+        return self.get_collection_df(CollectionEnum.WaterDemandTemplate, pivot_values)
 
-    def get_water_zone_template_df(self):
+    def get_water_zone_template_df(self, pivot_values=False):
         """
         Get table of WaterZoneTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneTemplate)
+        return self.get_collection_df(CollectionEnum.WaterZoneTemplate, pivot_values)
 
-    def get_region_template_df(self):
+    def get_region_template_df(self, pivot_values=False):
         """
         Get table of RegionTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionTemplate)
+        return self.get_collection_df(CollectionEnum.RegionTemplate, pivot_values)
 
-    def get_zone_template_df(self):
+    def get_zone_template_df(self, pivot_values=False):
         """
         Get table of ZoneTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneTemplate)
+        return self.get_collection_df(CollectionEnum.ZoneTemplate, pivot_values)
 
-    def get_node_template_df(self):
+    def get_node_template_df(self, pivot_values=False):
         """
         Get table of NodeTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.NodeTemplate)
+        return self.get_collection_df(CollectionEnum.NodeTemplate, pivot_values)
 
-    def get_line_template_df(self):
+    def get_line_template_df(self, pivot_values=False):
         """
         Get table of LineTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.LineTemplate)
+        return self.get_collection_df(CollectionEnum.LineTemplate, pivot_values)
 
-    def get_mlf_template_df(self):
+    def get_mlf_template_df(self, pivot_values=False):
         """
         Get table of MLFTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MLFTemplate)
+        return self.get_collection_df(CollectionEnum.MLFTemplate, pivot_values)
 
-    def get_transformer_template_df(self):
+    def get_transformer_template_df(self, pivot_values=False):
         """
         Get table of TransformerTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransformerTemplate)
+        return self.get_collection_df(CollectionEnum.TransformerTemplate, pivot_values)
 
-    def get_flow_control_template_df(self):
+    def get_flow_control_template_df(self, pivot_values=False):
         """
         Get table of FlowControlTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FlowControlTemplate)
+        return self.get_collection_df(CollectionEnum.FlowControlTemplate, pivot_values)
 
-    def get_interface_template_df(self):
+    def get_interface_template_df(self, pivot_values=False):
         """
         Get table of InterfaceTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.InterfaceTemplate)
+        return self.get_collection_df(CollectionEnum.InterfaceTemplate, pivot_values)
 
-    def get_contingency_template_df(self):
+    def get_contingency_template_df(self, pivot_values=False):
         """
         Get table of ContingencyTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyTemplate)
+        return self.get_collection_df(CollectionEnum.ContingencyTemplate, pivot_values)
 
-    def get_company_template_df(self):
+    def get_company_template_df(self, pivot_values=False):
         """
         Get table of CompanyTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CompanyTemplate)
+        return self.get_collection_df(CollectionEnum.CompanyTemplate, pivot_values)
 
-    def get_financial_contract_template_df(self):
+    def get_financial_contract_template_df(self, pivot_values=False):
         """
         Get table of FinancialContractTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractTemplate)
+        return self.get_collection_df(CollectionEnum.FinancialContractTemplate, pivot_values)
 
-    def get_hub_template_df(self):
+    def get_hub_template_df(self, pivot_values=False):
         """
         Get table of HubTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HubTemplate)
+        return self.get_collection_df(CollectionEnum.HubTemplate, pivot_values)
 
-    def get_transmission_right_template_df(self):
+    def get_transmission_right_template_df(self, pivot_values=False):
         """
         Get table of TransmissionRightTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightTemplate)
+        return self.get_collection_df(CollectionEnum.TransmissionRightTemplate, pivot_values)
 
-    def get_cournot_template_df(self):
+    def get_cournot_template_df(self, pivot_values=False):
         """
         Get table of CournotTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CournotTemplate)
+        return self.get_collection_df(CollectionEnum.CournotTemplate, pivot_values)
 
-    def get_rsi_template_df(self):
+    def get_rsi_template_df(self, pivot_values=False):
         """
         Get table of RSITemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RSITemplate)
+        return self.get_collection_df(CollectionEnum.RSITemplate, pivot_values)
 
-    def get_market_template_df(self):
+    def get_market_template_df(self, pivot_values=False):
         """
         Get table of MarketTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketTemplate)
+        return self.get_collection_df(CollectionEnum.MarketTemplate, pivot_values)
 
-    def get_constraint_template_df(self):
+    def get_constraint_template_df(self, pivot_values=False):
         """
         Get table of ConstraintTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintTemplate)
+        return self.get_collection_df(CollectionEnum.ConstraintTemplate, pivot_values)
 
-    def get_decision_variable_template_df(self):
+    def get_decision_variable_template_df(self, pivot_values=False):
         """
         Get table of DecisionVariableTemplate records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.DecisionVariableTemplate)
+        return self.get_collection_df(CollectionEnum.DecisionVariableTemplate, pivot_values)
 
-    def get_generator_heat_input_df(self):
+    def get_generator_heat_input_df(self, pivot_values=False):
         """
         Get table of GeneratorHeatInput records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorHeatInput)
+        return self.get_collection_df(CollectionEnum.GeneratorHeatInput, pivot_values)
 
-    def get_generator_transition_df(self):
+    def get_generator_transition_df(self, pivot_values=False):
         """
         Get table of GeneratorTransition records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorTransition)
+        return self.get_collection_df(CollectionEnum.GeneratorTransition, pivot_values)
 
-    def get_generator_fuels_df(self):
+    def get_generator_fuels_df(self, pivot_values=False):
         """
         Get table of GeneratorFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorFuels)
+        return self.get_collection_df(CollectionEnum.GeneratorFuels, pivot_values)
 
-    def get_generator_start_fuels_df(self):
+    def get_generator_start_fuels_df(self, pivot_values=False):
         """
         Get table of GeneratorStartFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorStartFuels)
+        return self.get_collection_df(CollectionEnum.GeneratorStartFuels, pivot_values)
 
-    def get_generator_head_storage_df(self):
+    def get_generator_head_storage_df(self, pivot_values=False):
         """
         Get table of GeneratorHeadStorage records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorHeadStorage)
+        return self.get_collection_df(CollectionEnum.GeneratorHeadStorage, pivot_values)
 
-    def get_generator_tail_storage_df(self):
+    def get_generator_tail_storage_df(self, pivot_values=False):
         """
         Get table of GeneratorTailStorage records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorTailStorage)
+        return self.get_collection_df(CollectionEnum.GeneratorTailStorage, pivot_values)
 
-    def get_generator_power_station_df(self):
+    def get_generator_power_station_df(self, pivot_values=False):
         """
         Get table of GeneratorPowerStation records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorPowerStation)
+        return self.get_collection_df(CollectionEnum.GeneratorPowerStation, pivot_values)
 
-    def get_generator_markto_markets_df(self):
+    def get_generator_markto_markets_df(self, pivot_values=False):
         """
         Get table of GeneratorMarktoMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorMarktoMarkets)
+        return self.get_collection_df(CollectionEnum.GeneratorMarktoMarkets, pivot_values)
 
-    def get_generator_gas_node_df(self):
+    def get_generator_gas_node_df(self, pivot_values=False):
         """
         Get table of GeneratorGasNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorGasNode)
+        return self.get_collection_df(CollectionEnum.GeneratorGasNode, pivot_values)
 
-    def get_generator_water_node_df(self):
+    def get_generator_water_node_df(self, pivot_values=False):
         """
         Get table of GeneratorWaterNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorWaterNode)
+        return self.get_collection_df(CollectionEnum.GeneratorWaterNode, pivot_values)
 
-    def get_generator_nodes_df(self):
+    def get_generator_nodes_df(self, pivot_values=False):
         """
         Get table of GeneratorNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorNodes)
+        return self.get_collection_df(CollectionEnum.GeneratorNodes, pivot_values)
 
-    def get_generator_nodes_star__df(self):
+    def get_generator_nodes_star__df(self, pivot_values=False):
         """
         Get table of GeneratorNodes_star_ records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorNodes_star_)
+        return self.get_collection_df(CollectionEnum.GeneratorNodes_star_, pivot_values)
 
-    def get_generator_companies_df(self):
+    def get_generator_companies_df(self, pivot_values=False):
         """
         Get table of GeneratorCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorCompanies)
+        return self.get_collection_df(CollectionEnum.GeneratorCompanies, pivot_values)
 
-    def get_fuel_gas_nodes_df(self):
+    def get_fuel_gas_nodes_df(self, pivot_values=False):
         """
         Get table of FuelGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelGasNodes)
+        return self.get_collection_df(CollectionEnum.FuelGasNodes, pivot_values)
 
-    def get_fuel_companies_df(self):
+    def get_fuel_companies_df(self, pivot_values=False):
         """
         Get table of FuelCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelCompanies)
+        return self.get_collection_df(CollectionEnum.FuelCompanies, pivot_values)
 
-    def get_fuel_contract_generators_df(self):
+    def get_fuel_contract_generators_df(self, pivot_values=False):
         """
         Get table of FuelContractGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelContractGenerators)
+        return self.get_collection_df(CollectionEnum.FuelContractGenerators, pivot_values)
 
-    def get_fuel_contract_fuel_df(self):
+    def get_fuel_contract_fuel_df(self, pivot_values=False):
         """
         Get table of FuelContractFuel records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelContractFuel)
+        return self.get_collection_df(CollectionEnum.FuelContractFuel, pivot_values)
 
-    def get_fuel_contract_companies_df(self):
+    def get_fuel_contract_companies_df(self, pivot_values=False):
         """
         Get table of FuelContractCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelContractCompanies)
+        return self.get_collection_df(CollectionEnum.FuelContractCompanies, pivot_values)
 
-    def get_fuel_contract_constraints_df(self):
+    def get_fuel_contract_constraints_df(self, pivot_values=False):
         """
         Get table of FuelContractConstraints records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FuelContractConstraints)
+        return self.get_collection_df(CollectionEnum.FuelContractConstraints, pivot_values)
 
-    def get_emission_generators_df(self):
+    def get_emission_generators_df(self, pivot_values=False):
         """
         Get table of EmissionGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.EmissionGenerators)
+        return self.get_collection_df(CollectionEnum.EmissionGenerators, pivot_values)
 
-    def get_emission_fuels_df(self):
+    def get_emission_fuels_df(self, pivot_values=False):
         """
         Get table of EmissionFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.EmissionFuels)
+        return self.get_collection_df(CollectionEnum.EmissionFuels, pivot_values)
 
-    def get_emission_gas_nodes_df(self):
+    def get_emission_gas_nodes_df(self, pivot_values=False):
         """
         Get table of EmissionGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.EmissionGasNodes)
+        return self.get_collection_df(CollectionEnum.EmissionGasNodes, pivot_values)
 
-    def get_emission_gas_plants_df(self):
+    def get_emission_gas_plants_df(self, pivot_values=False):
         """
         Get table of EmissionGasPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.EmissionGasPlants)
+        return self.get_collection_df(CollectionEnum.EmissionGasPlants, pivot_values)
 
-    def get_emission_water_plants_df(self):
+    def get_emission_water_plants_df(self, pivot_values=False):
         """
         Get table of EmissionWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.EmissionWaterPlants)
+        return self.get_collection_df(CollectionEnum.EmissionWaterPlants, pivot_values)
 
-    def get_abatement_generators_df(self):
+    def get_abatement_generators_df(self, pivot_values=False):
         """
         Get table of AbatementGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.AbatementGenerators)
+        return self.get_collection_df(CollectionEnum.AbatementGenerators, pivot_values)
 
-    def get_abatement_emissions_df(self):
+    def get_abatement_emissions_df(self, pivot_values=False):
         """
         Get table of AbatementEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.AbatementEmissions)
+        return self.get_collection_df(CollectionEnum.AbatementEmissions, pivot_values)
 
-    def get_abatement_consumables_df(self):
+    def get_abatement_consumables_df(self, pivot_values=False):
         """
         Get table of AbatementConsumables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.AbatementConsumables)
+        return self.get_collection_df(CollectionEnum.AbatementConsumables, pivot_values)
 
-    def get_storage_water_nodes_df(self):
+    def get_storage_water_nodes_df(self, pivot_values=False):
         """
         Get table of StorageWaterNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.StorageWaterNodes)
+        return self.get_collection_df(CollectionEnum.StorageWaterNodes, pivot_values)
 
-    def get_waterway_storage_from_df(self):
+    def get_waterway_storage_from_df(self, pivot_values=False):
         """
         Get table of WaterwayStorageFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterwayStorageFrom)
+        return self.get_collection_df(CollectionEnum.WaterwayStorageFrom, pivot_values)
 
-    def get_waterway_storage_to_df(self):
+    def get_waterway_storage_to_df(self, pivot_values=False):
         """
         Get table of WaterwayStorageTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterwayStorageTo)
+        return self.get_collection_df(CollectionEnum.WaterwayStorageTo, pivot_values)
 
-    def get_power_station_nodes_df(self):
+    def get_power_station_nodes_df(self, pivot_values=False):
         """
         Get table of PowerStationNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PowerStationNodes)
+        return self.get_collection_df(CollectionEnum.PowerStationNodes, pivot_values)
 
-    def get_physical_contract_generation_node_df(self):
+    def get_physical_contract_generation_node_df(self, pivot_values=False):
         """
         Get table of PhysicalContractGenerationNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PhysicalContractGenerationNode)
+        return self.get_collection_df(CollectionEnum.PhysicalContractGenerationNode, pivot_values)
 
-    def get_physical_contract_load_node_df(self):
+    def get_physical_contract_load_node_df(self, pivot_values=False):
         """
         Get table of PhysicalContractLoadNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PhysicalContractLoadNode)
+        return self.get_collection_df(CollectionEnum.PhysicalContractLoadNode, pivot_values)
 
-    def get_physical_contract_companies_df(self):
+    def get_physical_contract_companies_df(self, pivot_values=False):
         """
         Get table of PhysicalContractCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PhysicalContractCompanies)
+        return self.get_collection_df(CollectionEnum.PhysicalContractCompanies, pivot_values)
 
-    def get_purchaser_nodes_df(self):
+    def get_purchaser_nodes_df(self, pivot_values=False):
         """
         Get table of PurchaserNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PurchaserNodes)
+        return self.get_collection_df(CollectionEnum.PurchaserNodes, pivot_values)
 
-    def get_purchaser_nodes_star__df(self):
+    def get_purchaser_nodes_star__df(self, pivot_values=False):
         """
         Get table of PurchaserNodes_star_ records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PurchaserNodes_star_)
+        return self.get_collection_df(CollectionEnum.PurchaserNodes_star_, pivot_values)
 
-    def get_purchaser_companies_df(self):
+    def get_purchaser_companies_df(self, pivot_values=False):
         """
         Get table of PurchaserCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.PurchaserCompanies)
+        return self.get_collection_df(CollectionEnum.PurchaserCompanies, pivot_values)
 
-    def get_reserve_generators_df(self):
+    def get_reserve_generators_df(self, pivot_values=False):
         """
         Get table of ReserveGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveGenerators)
+        return self.get_collection_df(CollectionEnum.ReserveGenerators, pivot_values)
 
-    def get_reserve_purchasers_df(self):
+    def get_reserve_purchasers_df(self, pivot_values=False):
         """
         Get table of ReservePurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReservePurchasers)
+        return self.get_collection_df(CollectionEnum.ReservePurchasers, pivot_values)
 
-    def get_reserve_generator_contingencies_df(self):
+    def get_reserve_generator_contingencies_df(self, pivot_values=False):
         """
         Get table of ReserveGeneratorContingencies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveGeneratorContingencies)
+        return self.get_collection_df(CollectionEnum.ReserveGeneratorContingencies, pivot_values)
 
-    def get_reserve_generator_cost_allocation_df(self):
+    def get_reserve_generator_cost_allocation_df(self, pivot_values=False):
         """
         Get table of ReserveGeneratorCostAllocation records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveGeneratorCostAllocation)
+        return self.get_collection_df(CollectionEnum.ReserveGeneratorCostAllocation, pivot_values)
 
-    def get_reserve_batteries_df(self):
+    def get_reserve_batteries_df(self, pivot_values=False):
         """
         Get table of ReserveBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveBatteries)
+        return self.get_collection_df(CollectionEnum.ReserveBatteries, pivot_values)
 
-    def get_reserve_nested_reserves_df(self):
+    def get_reserve_nested_reserves_df(self, pivot_values=False):
         """
         Get table of ReserveNestedReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveNestedReserves)
+        return self.get_collection_df(CollectionEnum.ReserveNestedReserves, pivot_values)
 
-    def get_reserve_regions_df(self):
+    def get_reserve_regions_df(self, pivot_values=False):
         """
         Get table of ReserveRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveRegions)
+        return self.get_collection_df(CollectionEnum.ReserveRegions, pivot_values)
 
-    def get_reserve_line_contingencies_df(self):
+    def get_reserve_line_contingencies_df(self, pivot_values=False):
         """
         Get table of ReserveLineContingencies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReserveLineContingencies)
+        return self.get_collection_df(CollectionEnum.ReserveLineContingencies, pivot_values)
 
-    def get_battery_node_df(self):
+    def get_battery_node_df(self, pivot_values=False):
         """
         Get table of BatteryNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.BatteryNode)
+        return self.get_collection_df(CollectionEnum.BatteryNode, pivot_values)
 
-    def get_battery_nodes_star__df(self):
+    def get_battery_nodes_star__df(self, pivot_values=False):
         """
         Get table of BatteryNodes_star_ records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.BatteryNodes_star_)
+        return self.get_collection_df(CollectionEnum.BatteryNodes_star_, pivot_values)
 
-    def get_battery_companies_df(self):
+    def get_battery_companies_df(self, pivot_values=False):
         """
         Get table of BatteryCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.BatteryCompanies)
+        return self.get_collection_df(CollectionEnum.BatteryCompanies, pivot_values)
 
-    def get_maintenance_generators_df(self):
+    def get_maintenance_generators_df(self, pivot_values=False):
         """
         Get table of MaintenanceGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MaintenanceGenerators)
+        return self.get_collection_df(CollectionEnum.MaintenanceGenerators, pivot_values)
 
-    def get_maintenance_gas_pipelines_df(self):
+    def get_maintenance_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of MaintenanceGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MaintenanceGasPipelines)
+        return self.get_collection_df(CollectionEnum.MaintenanceGasPipelines, pivot_values)
 
-    def get_maintenance_lines_df(self):
+    def get_maintenance_lines_df(self, pivot_values=False):
         """
         Get table of MaintenanceLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MaintenanceLines)
+        return self.get_collection_df(CollectionEnum.MaintenanceLines, pivot_values)
 
-    def get_maintenance_prerequisites_df(self):
+    def get_maintenance_prerequisites_df(self, pivot_values=False):
         """
         Get table of MaintenancePrerequisites records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MaintenancePrerequisites)
+        return self.get_collection_df(CollectionEnum.MaintenancePrerequisites, pivot_values)
 
-    def get_generator_heat_input_nodes_df(self):
+    def get_generator_heat_input_nodes_df(self, pivot_values=False):
         """
         Get table of GeneratorHeatInputNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorHeatInputNodes)
+        return self.get_collection_df(CollectionEnum.GeneratorHeatInputNodes, pivot_values)
 
-    def get_generator_heat_output_nodes_df(self):
+    def get_generator_heat_output_nodes_df(self, pivot_values=False):
         """
         Get table of GeneratorHeatOutputNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GeneratorHeatOutputNodes)
+        return self.get_collection_df(CollectionEnum.GeneratorHeatOutputNodes, pivot_values)
 
-    def get_heat_plant_fuels_df(self):
+    def get_heat_plant_fuels_df(self, pivot_values=False):
         """
         Get table of HeatPlantFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatPlantFuels)
+        return self.get_collection_df(CollectionEnum.HeatPlantFuels, pivot_values)
 
-    def get_heat_plant_nodes_df(self):
+    def get_heat_plant_nodes_df(self, pivot_values=False):
         """
         Get table of HeatPlantNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatPlantNodes)
+        return self.get_collection_df(CollectionEnum.HeatPlantNodes, pivot_values)
 
-    def get_heat_plant_heat_input_nodes_df(self):
+    def get_heat_plant_heat_input_nodes_df(self, pivot_values=False):
         """
         Get table of HeatPlantHeatInputNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatPlantHeatInputNodes)
+        return self.get_collection_df(CollectionEnum.HeatPlantHeatInputNodes, pivot_values)
 
-    def get_heat_plant_heat_output_nodes_df(self):
+    def get_heat_plant_heat_output_nodes_df(self, pivot_values=False):
         """
         Get table of HeatPlantHeatOutputNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatPlantHeatOutputNodes)
+        return self.get_collection_df(CollectionEnum.HeatPlantHeatOutputNodes, pivot_values)
 
-    def get_heat_plant_start_fuels_df(self):
+    def get_heat_plant_start_fuels_df(self, pivot_values=False):
         """
         Get table of HeatPlantStartFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatPlantStartFuels)
+        return self.get_collection_df(CollectionEnum.HeatPlantStartFuels, pivot_values)
 
-    def get_heat_node_heat_export_nodes_df(self):
+    def get_heat_node_heat_export_nodes_df(self, pivot_values=False):
         """
         Get table of HeatNodeHeatExportNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatNodeHeatExportNodes)
+        return self.get_collection_df(CollectionEnum.HeatNodeHeatExportNodes, pivot_values)
 
-    def get_heat_node_water_plants_df(self):
+    def get_heat_node_water_plants_df(self, pivot_values=False):
         """
         Get table of HeatNodeWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.HeatNodeWaterPlants)
+        return self.get_collection_df(CollectionEnum.HeatNodeWaterPlants, pivot_values)
 
-    def get_gas_field_companies_df(self):
+    def get_gas_field_companies_df(self, pivot_values=False):
         """
         Get table of GasFieldCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasFieldCompanies)
+        return self.get_collection_df(CollectionEnum.GasFieldCompanies, pivot_values)
 
-    def get_gas_field_gas_node_df(self):
+    def get_gas_field_gas_node_df(self, pivot_values=False):
         """
         Get table of GasFieldGasNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasFieldGasNode)
+        return self.get_collection_df(CollectionEnum.GasFieldGasNode, pivot_values)
 
-    def get_gas_field_gas_basin_df(self):
+    def get_gas_field_gas_basin_df(self, pivot_values=False):
         """
         Get table of GasFieldGasBasin records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasFieldGasBasin)
+        return self.get_collection_df(CollectionEnum.GasFieldGasBasin, pivot_values)
 
-    def get_gas_plant_input_node_df(self):
+    def get_gas_plant_input_node_df(self, pivot_values=False):
         """
         Get table of GasPlantInputNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPlantInputNode)
+        return self.get_collection_df(CollectionEnum.GasPlantInputNode, pivot_values)
 
-    def get_gas_plant_output_node_df(self):
+    def get_gas_plant_output_node_df(self, pivot_values=False):
         """
         Get table of GasPlantOutputNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPlantOutputNode)
+        return self.get_collection_df(CollectionEnum.GasPlantOutputNode, pivot_values)
 
-    def get_gas_plant_node_df(self):
+    def get_gas_plant_node_df(self, pivot_values=False):
         """
         Get table of GasPlantNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPlantNode)
+        return self.get_collection_df(CollectionEnum.GasPlantNode, pivot_values)
 
-    def get_gas_pipeline_gas_node_from_df(self):
+    def get_gas_pipeline_gas_node_from_df(self, pivot_values=False):
         """
         Get table of GasPipelineGasNodeFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPipelineGasNodeFrom)
+        return self.get_collection_df(CollectionEnum.GasPipelineGasNodeFrom, pivot_values)
 
-    def get_gas_pipeline_gas_node_to_df(self):
+    def get_gas_pipeline_gas_node_to_df(self, pivot_values=False):
         """
         Get table of GasPipelineGasNodeTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasPipelineGasNodeTo)
+        return self.get_collection_df(CollectionEnum.GasPipelineGasNodeTo, pivot_values)
 
-    def get_gas_node_gas_zones_df(self):
+    def get_gas_node_gas_zones_df(self, pivot_values=False):
         """
         Get table of GasNodeGasZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasNodeGasZones)
+        return self.get_collection_df(CollectionEnum.GasNodeGasZones, pivot_values)
 
-    def get_gas_storage_gas_node_df(self):
+    def get_gas_storage_gas_node_df(self, pivot_values=False):
         """
         Get table of GasStorageGasNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasStorageGasNode)
+        return self.get_collection_df(CollectionEnum.GasStorageGasNode, pivot_values)
 
-    def get_gas_demand_gas_nodes_df(self):
+    def get_gas_demand_gas_nodes_df(self, pivot_values=False):
         """
         Get table of GasDemandGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasDemandGasNodes)
+        return self.get_collection_df(CollectionEnum.GasDemandGasNodes, pivot_values)
 
-    def get_gas_demand_companies_df(self):
+    def get_gas_demand_companies_df(self, pivot_values=False):
         """
         Get table of GasDemandCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasDemandCompanies)
+        return self.get_collection_df(CollectionEnum.GasDemandCompanies, pivot_values)
 
-    def get_gas_zone_generators_df(self):
+    def get_gas_zone_generators_df(self, pivot_values=False):
         """
         Get table of GasZoneGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneGenerators)
+        return self.get_collection_df(CollectionEnum.GasZoneGenerators, pivot_values)
 
-    def get_gas_zone_gas_fields_df(self):
+    def get_gas_zone_gas_fields_df(self, pivot_values=False):
         """
         Get table of GasZoneGasFields records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneGasFields)
+        return self.get_collection_df(CollectionEnum.GasZoneGasFields, pivot_values)
 
-    def get_gas_zone_gas_plants_df(self):
+    def get_gas_zone_gas_plants_df(self, pivot_values=False):
         """
         Get table of GasZoneGasPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneGasPlants)
+        return self.get_collection_df(CollectionEnum.GasZoneGasPlants, pivot_values)
 
-    def get_gas_zone_exporting_gas_pipelines_df(self):
+    def get_gas_zone_exporting_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of GasZoneExportingGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneExportingGasPipelines)
+        return self.get_collection_df(CollectionEnum.GasZoneExportingGasPipelines, pivot_values)
 
-    def get_gas_zone_importing_gas_pipelines_df(self):
+    def get_gas_zone_importing_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of GasZoneImportingGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneImportingGasPipelines)
+        return self.get_collection_df(CollectionEnum.GasZoneImportingGasPipelines, pivot_values)
 
-    def get_gas_zone_interzonal_gas_pipelines_df(self):
+    def get_gas_zone_interzonal_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of GasZoneInterzonalGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneInterzonalGasPipelines)
+        return self.get_collection_df(CollectionEnum.GasZoneInterzonalGasPipelines, pivot_values)
 
-    def get_gas_zone_intrazonal_gas_pipelines_df(self):
+    def get_gas_zone_intrazonal_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of GasZoneIntrazonalGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneIntrazonalGasPipelines)
+        return self.get_collection_df(CollectionEnum.GasZoneIntrazonalGasPipelines, pivot_values)
 
-    def get_gas_zone_gas_storages_df(self):
+    def get_gas_zone_gas_storages_df(self, pivot_values=False):
         """
         Get table of GasZoneGasStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneGasStorages)
+        return self.get_collection_df(CollectionEnum.GasZoneGasStorages, pivot_values)
 
-    def get_gas_zone_gas_demands_df(self):
+    def get_gas_zone_gas_demands_df(self, pivot_values=False):
         """
         Get table of GasZoneGasDemands records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneGasDemands)
+        return self.get_collection_df(CollectionEnum.GasZoneGasDemands, pivot_values)
 
-    def get_gas_zone_exporting_gas_transports_df(self):
+    def get_gas_zone_exporting_gas_transports_df(self, pivot_values=False):
         """
         Get table of GasZoneExportingGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneExportingGasTransports)
+        return self.get_collection_df(CollectionEnum.GasZoneExportingGasTransports, pivot_values)
 
-    def get_gas_zone_importing_gas_transports_df(self):
+    def get_gas_zone_importing_gas_transports_df(self, pivot_values=False):
         """
         Get table of GasZoneImportingGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneImportingGasTransports)
+        return self.get_collection_df(CollectionEnum.GasZoneImportingGasTransports, pivot_values)
 
-    def get_gas_zone_interzonal_gas_transports_df(self):
+    def get_gas_zone_interzonal_gas_transports_df(self, pivot_values=False):
         """
         Get table of GasZoneInterzonalGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneInterzonalGasTransports)
+        return self.get_collection_df(CollectionEnum.GasZoneInterzonalGasTransports, pivot_values)
 
-    def get_gas_zone_intrazonal_gas_transports_df(self):
+    def get_gas_zone_intrazonal_gas_transports_df(self, pivot_values=False):
         """
         Get table of GasZoneIntrazonalGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasZoneIntrazonalGasTransports)
+        return self.get_collection_df(CollectionEnum.GasZoneIntrazonalGasTransports, pivot_values)
 
-    def get_gas_contract_gas_fields_df(self):
+    def get_gas_contract_gas_fields_df(self, pivot_values=False):
         """
         Get table of GasContractGasFields records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasContractGasFields)
+        return self.get_collection_df(CollectionEnum.GasContractGasFields, pivot_values)
 
-    def get_gas_contract_gas_pipelines_df(self):
+    def get_gas_contract_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of GasContractGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasContractGasPipelines)
+        return self.get_collection_df(CollectionEnum.GasContractGasPipelines, pivot_values)
 
-    def get_gas_contract_gas_transports_df(self):
+    def get_gas_contract_gas_transports_df(self, pivot_values=False):
         """
         Get table of GasContractGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasContractGasTransports)
+        return self.get_collection_df(CollectionEnum.GasContractGasTransports, pivot_values)
 
-    def get_gas_transport_export_node_df(self):
+    def get_gas_transport_export_node_df(self, pivot_values=False):
         """
         Get table of GasTransportExportNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasTransportExportNode)
+        return self.get_collection_df(CollectionEnum.GasTransportExportNode, pivot_values)
 
-    def get_gas_transport_import_node_df(self):
+    def get_gas_transport_import_node_df(self, pivot_values=False):
         """
         Get table of GasTransportImportNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GasTransportImportNode)
+        return self.get_collection_df(CollectionEnum.GasTransportImportNode, pivot_values)
 
-    def get_water_plant_input_node_df(self):
+    def get_water_plant_input_node_df(self, pivot_values=False):
         """
         Get table of WaterPlantInputNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPlantInputNode)
+        return self.get_collection_df(CollectionEnum.WaterPlantInputNode, pivot_values)
 
-    def get_water_plant_output_node_df(self):
+    def get_water_plant_output_node_df(self, pivot_values=False):
         """
         Get table of WaterPlantOutputNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPlantOutputNode)
+        return self.get_collection_df(CollectionEnum.WaterPlantOutputNode, pivot_values)
 
-    def get_water_plant_node_df(self):
+    def get_water_plant_node_df(self, pivot_values=False):
         """
         Get table of WaterPlantNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPlantNode)
+        return self.get_collection_df(CollectionEnum.WaterPlantNode, pivot_values)
 
-    def get_water_pipeline_water_node_from_df(self):
+    def get_water_pipeline_water_node_from_df(self, pivot_values=False):
         """
         Get table of WaterPipelineWaterNodeFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPipelineWaterNodeFrom)
+        return self.get_collection_df(CollectionEnum.WaterPipelineWaterNodeFrom, pivot_values)
 
-    def get_water_pipeline_water_node_to_df(self):
+    def get_water_pipeline_water_node_to_df(self, pivot_values=False):
         """
         Get table of WaterPipelineWaterNodeTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterPipelineWaterNodeTo)
+        return self.get_collection_df(CollectionEnum.WaterPipelineWaterNodeTo, pivot_values)
 
-    def get_water_node_water_zones_df(self):
+    def get_water_node_water_zones_df(self, pivot_values=False):
         """
         Get table of WaterNodeWaterZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterNodeWaterZones)
+        return self.get_collection_df(CollectionEnum.WaterNodeWaterZones, pivot_values)
 
-    def get_water_node_node_df(self):
+    def get_water_node_node_df(self, pivot_values=False):
         """
         Get table of WaterNodeNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterNodeNode)
+        return self.get_collection_df(CollectionEnum.WaterNodeNode, pivot_values)
 
-    def get_water_storage_water_node_df(self):
+    def get_water_storage_water_node_df(self, pivot_values=False):
         """
         Get table of WaterStorageWaterNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterStorageWaterNode)
+        return self.get_collection_df(CollectionEnum.WaterStorageWaterNode, pivot_values)
 
-    def get_water_demand_water_nodes_df(self):
+    def get_water_demand_water_nodes_df(self, pivot_values=False):
         """
         Get table of WaterDemandWaterNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterDemandWaterNodes)
+        return self.get_collection_df(CollectionEnum.WaterDemandWaterNodes, pivot_values)
 
-    def get_water_zone_water_plants_df(self):
+    def get_water_zone_water_plants_df(self, pivot_values=False):
         """
         Get table of WaterZoneWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneWaterPlants)
+        return self.get_collection_df(CollectionEnum.WaterZoneWaterPlants, pivot_values)
 
-    def get_water_zone_water_storages_df(self):
+    def get_water_zone_water_storages_df(self, pivot_values=False):
         """
         Get table of WaterZoneWaterStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneWaterStorages)
+        return self.get_collection_df(CollectionEnum.WaterZoneWaterStorages, pivot_values)
 
-    def get_water_zone_exporting_water_pipelines_df(self):
+    def get_water_zone_exporting_water_pipelines_df(self, pivot_values=False):
         """
         Get table of WaterZoneExportingWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneExportingWaterPipelines)
+        return self.get_collection_df(CollectionEnum.WaterZoneExportingWaterPipelines, pivot_values)
 
-    def get_water_zone_importing_water_pipelines_df(self):
+    def get_water_zone_importing_water_pipelines_df(self, pivot_values=False):
         """
         Get table of WaterZoneImportingWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneImportingWaterPipelines)
+        return self.get_collection_df(CollectionEnum.WaterZoneImportingWaterPipelines, pivot_values)
 
-    def get_water_zone_interzonal_water_pipelines_df(self):
+    def get_water_zone_interzonal_water_pipelines_df(self, pivot_values=False):
         """
         Get table of WaterZoneInterzonalWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneInterzonalWaterPipelines)
+        return self.get_collection_df(CollectionEnum.WaterZoneInterzonalWaterPipelines, pivot_values)
 
-    def get_water_zone_intrazonal_water_pipelines_df(self):
+    def get_water_zone_intrazonal_water_pipelines_df(self, pivot_values=False):
         """
         Get table of WaterZoneIntrazonalWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneIntrazonalWaterPipelines)
+        return self.get_collection_df(CollectionEnum.WaterZoneIntrazonalWaterPipelines, pivot_values)
 
-    def get_water_zone_water_demands_df(self):
+    def get_water_zone_water_demands_df(self, pivot_values=False):
         """
         Get table of WaterZoneWaterDemands records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.WaterZoneWaterDemands)
+        return self.get_collection_df(CollectionEnum.WaterZoneWaterDemands, pivot_values)
 
-    def get_region_generators_df(self):
+    def get_region_generators_df(self, pivot_values=False):
         """
         Get table of RegionGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionGenerators)
+        return self.get_collection_df(CollectionEnum.RegionGenerators, pivot_values)
 
-    def get_region_emissions_df(self):
+    def get_region_emissions_df(self, pivot_values=False):
         """
         Get table of RegionEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionEmissions)
+        return self.get_collection_df(CollectionEnum.RegionEmissions, pivot_values)
 
-    def get_region_generation_contracts_df(self):
+    def get_region_generation_contracts_df(self, pivot_values=False):
         """
         Get table of RegionGenerationContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionGenerationContracts)
+        return self.get_collection_df(CollectionEnum.RegionGenerationContracts, pivot_values)
 
-    def get_region_load_contracts_df(self):
+    def get_region_load_contracts_df(self, pivot_values=False):
         """
         Get table of RegionLoadContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionLoadContracts)
+        return self.get_collection_df(CollectionEnum.RegionLoadContracts, pivot_values)
 
-    def get_region_purchasers_df(self):
+    def get_region_purchasers_df(self, pivot_values=False):
         """
         Get table of RegionPurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionPurchasers)
+        return self.get_collection_df(CollectionEnum.RegionPurchasers, pivot_values)
 
-    def get_region_markets_df(self):
+    def get_region_markets_df(self, pivot_values=False):
         """
         Get table of RegionMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionMarkets)
+        return self.get_collection_df(CollectionEnum.RegionMarkets, pivot_values)
 
-    def get_region_batteries_df(self):
+    def get_region_batteries_df(self, pivot_values=False):
         """
         Get table of RegionBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionBatteries)
+        return self.get_collection_df(CollectionEnum.RegionBatteries, pivot_values)
 
-    def get_region_regions_df(self):
+    def get_region_regions_df(self, pivot_values=False):
         """
         Get table of RegionRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionRegions)
+        return self.get_collection_df(CollectionEnum.RegionRegions, pivot_values)
 
-    def get_region_reference_node_df(self):
+    def get_region_reference_node_df(self, pivot_values=False):
         """
         Get table of RegionReferenceNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionReferenceNode)
+        return self.get_collection_df(CollectionEnum.RegionReferenceNode, pivot_values)
 
-    def get_region_exporting_lines_df(self):
+    def get_region_exporting_lines_df(self, pivot_values=False):
         """
         Get table of RegionExportingLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionExportingLines)
+        return self.get_collection_df(CollectionEnum.RegionExportingLines, pivot_values)
 
-    def get_region_importing_lines_df(self):
+    def get_region_importing_lines_df(self, pivot_values=False):
         """
         Get table of RegionImportingLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionImportingLines)
+        return self.get_collection_df(CollectionEnum.RegionImportingLines, pivot_values)
 
-    def get_region_interregional_lines_df(self):
+    def get_region_interregional_lines_df(self, pivot_values=False):
         """
         Get table of RegionInterregionalLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionInterregionalLines)
+        return self.get_collection_df(CollectionEnum.RegionInterregionalLines, pivot_values)
 
-    def get_region_intraregional_lines_df(self):
+    def get_region_intraregional_lines_df(self, pivot_values=False):
         """
         Get table of RegionIntraregionalLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionIntraregionalLines)
+        return self.get_collection_df(CollectionEnum.RegionIntraregionalLines, pivot_values)
 
-    def get_region_exporting_transformers_df(self):
+    def get_region_exporting_transformers_df(self, pivot_values=False):
         """
         Get table of RegionExportingTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionExportingTransformers)
+        return self.get_collection_df(CollectionEnum.RegionExportingTransformers, pivot_values)
 
-    def get_region_importing_transformers_df(self):
+    def get_region_importing_transformers_df(self, pivot_values=False):
         """
         Get table of RegionImportingTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionImportingTransformers)
+        return self.get_collection_df(CollectionEnum.RegionImportingTransformers, pivot_values)
 
-    def get_region_interregional_transformers_df(self):
+    def get_region_interregional_transformers_df(self, pivot_values=False):
         """
         Get table of RegionInterregionalTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionInterregionalTransformers)
+        return self.get_collection_df(CollectionEnum.RegionInterregionalTransformers, pivot_values)
 
-    def get_region_intraregional_transformers_df(self):
+    def get_region_intraregional_transformers_df(self, pivot_values=False):
         """
         Get table of RegionIntraregionalTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionIntraregionalTransformers)
+        return self.get_collection_df(CollectionEnum.RegionIntraregionalTransformers, pivot_values)
 
-    def get_region_utilities_df(self):
+    def get_region_utilities_df(self, pivot_values=False):
         """
         Get table of RegionUtilities records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RegionUtilities)
+        return self.get_collection_df(CollectionEnum.RegionUtilities, pivot_values)
 
-    def get_zone_capacity_generators_df(self):
+    def get_zone_capacity_generators_df(self, pivot_values=False):
         """
         Get table of ZoneCapacityGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneCapacityGenerators)
+        return self.get_collection_df(CollectionEnum.ZoneCapacityGenerators, pivot_values)
 
-    def get_zone_generators_df(self):
+    def get_zone_generators_df(self, pivot_values=False):
         """
         Get table of ZoneGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneGenerators)
+        return self.get_collection_df(CollectionEnum.ZoneGenerators, pivot_values)
 
-    def get_zone_emissions_df(self):
+    def get_zone_emissions_df(self, pivot_values=False):
         """
         Get table of ZoneEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneEmissions)
+        return self.get_collection_df(CollectionEnum.ZoneEmissions, pivot_values)
 
-    def get_zone_capacity_generation_contracts_df(self):
+    def get_zone_capacity_generation_contracts_df(self, pivot_values=False):
         """
         Get table of ZoneCapacityGenerationContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneCapacityGenerationContracts)
+        return self.get_collection_df(CollectionEnum.ZoneCapacityGenerationContracts, pivot_values)
 
-    def get_zone_capacity_load_contracts_df(self):
+    def get_zone_capacity_load_contracts_df(self, pivot_values=False):
         """
         Get table of ZoneCapacityLoadContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneCapacityLoadContracts)
+        return self.get_collection_df(CollectionEnum.ZoneCapacityLoadContracts, pivot_values)
 
-    def get_zone_generation_contracts_df(self):
+    def get_zone_generation_contracts_df(self, pivot_values=False):
         """
         Get table of ZoneGenerationContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneGenerationContracts)
+        return self.get_collection_df(CollectionEnum.ZoneGenerationContracts, pivot_values)
 
-    def get_zone_load_contracts_df(self):
+    def get_zone_load_contracts_df(self, pivot_values=False):
         """
         Get table of ZoneLoadContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneLoadContracts)
+        return self.get_collection_df(CollectionEnum.ZoneLoadContracts, pivot_values)
 
-    def get_zone_capacity_purchasers_df(self):
+    def get_zone_capacity_purchasers_df(self, pivot_values=False):
         """
         Get table of ZoneCapacityPurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneCapacityPurchasers)
+        return self.get_collection_df(CollectionEnum.ZoneCapacityPurchasers, pivot_values)
 
-    def get_zone_purchasers_df(self):
+    def get_zone_purchasers_df(self, pivot_values=False):
         """
         Get table of ZonePurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZonePurchasers)
+        return self.get_collection_df(CollectionEnum.ZonePurchasers, pivot_values)
 
-    def get_zone_markets_df(self):
+    def get_zone_markets_df(self, pivot_values=False):
         """
         Get table of ZoneMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneMarkets)
+        return self.get_collection_df(CollectionEnum.ZoneMarkets, pivot_values)
 
-    def get_zone_capacity_markets_df(self):
+    def get_zone_capacity_markets_df(self, pivot_values=False):
         """
         Get table of ZoneCapacityMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneCapacityMarkets)
+        return self.get_collection_df(CollectionEnum.ZoneCapacityMarkets, pivot_values)
 
-    def get_zone_capacity_batteries_df(self):
+    def get_zone_capacity_batteries_df(self, pivot_values=False):
         """
         Get table of ZoneCapacityBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneCapacityBatteries)
+        return self.get_collection_df(CollectionEnum.ZoneCapacityBatteries, pivot_values)
 
-    def get_zone_batteries_df(self):
+    def get_zone_batteries_df(self, pivot_values=False):
         """
         Get table of ZoneBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneBatteries)
+        return self.get_collection_df(CollectionEnum.ZoneBatteries, pivot_values)
 
-    def get_zone_region_df(self):
+    def get_zone_region_df(self, pivot_values=False):
         """
         Get table of ZoneRegion records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneRegion)
+        return self.get_collection_df(CollectionEnum.ZoneRegion, pivot_values)
 
-    def get_zone_zones_df(self):
+    def get_zone_zones_df(self, pivot_values=False):
         """
         Get table of ZoneZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneZones)
+        return self.get_collection_df(CollectionEnum.ZoneZones, pivot_values)
 
-    def get_zone_reference_node_df(self):
+    def get_zone_reference_node_df(self, pivot_values=False):
         """
         Get table of ZoneReferenceNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneReferenceNode)
+        return self.get_collection_df(CollectionEnum.ZoneReferenceNode, pivot_values)
 
-    def get_zone_exporting_capacity_lines_df(self):
+    def get_zone_exporting_capacity_lines_df(self, pivot_values=False):
         """
         Get table of ZoneExportingCapacityLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneExportingCapacityLines)
+        return self.get_collection_df(CollectionEnum.ZoneExportingCapacityLines, pivot_values)
 
-    def get_zone_exporting_lines_df(self):
+    def get_zone_exporting_lines_df(self, pivot_values=False):
         """
         Get table of ZoneExportingLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneExportingLines)
+        return self.get_collection_df(CollectionEnum.ZoneExportingLines, pivot_values)
 
-    def get_zone_importing_capacity_lines_df(self):
+    def get_zone_importing_capacity_lines_df(self, pivot_values=False):
         """
         Get table of ZoneImportingCapacityLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneImportingCapacityLines)
+        return self.get_collection_df(CollectionEnum.ZoneImportingCapacityLines, pivot_values)
 
-    def get_zone_importing_lines_df(self):
+    def get_zone_importing_lines_df(self, pivot_values=False):
         """
         Get table of ZoneImportingLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneImportingLines)
+        return self.get_collection_df(CollectionEnum.ZoneImportingLines, pivot_values)
 
-    def get_zone_interzonal_lines_df(self):
+    def get_zone_interzonal_lines_df(self, pivot_values=False):
         """
         Get table of ZoneInterzonalLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneInterzonalLines)
+        return self.get_collection_df(CollectionEnum.ZoneInterzonalLines, pivot_values)
 
-    def get_zone_intrazonal_lines_df(self):
+    def get_zone_intrazonal_lines_df(self, pivot_values=False):
         """
         Get table of ZoneIntrazonalLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneIntrazonalLines)
+        return self.get_collection_df(CollectionEnum.ZoneIntrazonalLines, pivot_values)
 
-    def get_zone_exporting_capacity_transformers_df(self):
+    def get_zone_exporting_capacity_transformers_df(self, pivot_values=False):
         """
         Get table of ZoneExportingCapacityTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneExportingCapacityTransformers)
+        return self.get_collection_df(CollectionEnum.ZoneExportingCapacityTransformers, pivot_values)
 
-    def get_zone_exporting_transformers_df(self):
+    def get_zone_exporting_transformers_df(self, pivot_values=False):
         """
         Get table of ZoneExportingTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneExportingTransformers)
+        return self.get_collection_df(CollectionEnum.ZoneExportingTransformers, pivot_values)
 
-    def get_zone_importing_capacity_transformers_df(self):
+    def get_zone_importing_capacity_transformers_df(self, pivot_values=False):
         """
         Get table of ZoneImportingCapacityTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneImportingCapacityTransformers)
+        return self.get_collection_df(CollectionEnum.ZoneImportingCapacityTransformers, pivot_values)
 
-    def get_zone_importing_transformers_df(self):
+    def get_zone_importing_transformers_df(self, pivot_values=False):
         """
         Get table of ZoneImportingTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneImportingTransformers)
+        return self.get_collection_df(CollectionEnum.ZoneImportingTransformers, pivot_values)
 
-    def get_zone_interzonal_transformers_df(self):
+    def get_zone_interzonal_transformers_df(self, pivot_values=False):
         """
         Get table of ZoneInterzonalTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneInterzonalTransformers)
+        return self.get_collection_df(CollectionEnum.ZoneInterzonalTransformers, pivot_values)
 
-    def get_zone_intrazonal_transformers_df(self):
+    def get_zone_intrazonal_transformers_df(self, pivot_values=False):
         """
         Get table of ZoneIntrazonalTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ZoneIntrazonalTransformers)
+        return self.get_collection_df(CollectionEnum.ZoneIntrazonalTransformers, pivot_values)
 
-    def get_node_region_df(self):
+    def get_node_region_df(self, pivot_values=False):
         """
         Get table of NodeRegion records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.NodeRegion)
+        return self.get_collection_df(CollectionEnum.NodeRegion, pivot_values)
 
-    def get_node_capacity_zone_df(self):
+    def get_node_capacity_zone_df(self, pivot_values=False):
         """
         Get table of NodeCapacityZone records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.NodeCapacityZone)
+        return self.get_collection_df(CollectionEnum.NodeCapacityZone, pivot_values)
 
-    def get_node_zone_df(self):
+    def get_node_zone_df(self, pivot_values=False):
         """
         Get table of NodeZone records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.NodeZone)
+        return self.get_collection_df(CollectionEnum.NodeZone, pivot_values)
 
-    def get_node_hubs_df(self):
+    def get_node_hubs_df(self, pivot_values=False):
         """
         Get table of NodeHubs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.NodeHubs)
+        return self.get_collection_df(CollectionEnum.NodeHubs, pivot_values)
 
-    def get_line_node_from_df(self):
+    def get_line_node_from_df(self, pivot_values=False):
         """
         Get table of LineNodeFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.LineNodeFrom)
+        return self.get_collection_df(CollectionEnum.LineNodeFrom, pivot_values)
 
-    def get_line_node_to_df(self):
+    def get_line_node_to_df(self, pivot_values=False):
         """
         Get table of LineNodeTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.LineNodeTo)
+        return self.get_collection_df(CollectionEnum.LineNodeTo, pivot_values)
 
-    def get_line_companies_df(self):
+    def get_line_companies_df(self, pivot_values=False):
         """
         Get table of LineCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.LineCompanies)
+        return self.get_collection_df(CollectionEnum.LineCompanies, pivot_values)
 
-    def get_mlf_regions_df(self):
+    def get_mlf_regions_df(self, pivot_values=False):
         """
         Get table of MLFRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MLFRegions)
+        return self.get_collection_df(CollectionEnum.MLFRegions, pivot_values)
 
-    def get_mlf_node_df(self):
+    def get_mlf_node_df(self, pivot_values=False):
         """
         Get table of MLFNode records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MLFNode)
+        return self.get_collection_df(CollectionEnum.MLFNode, pivot_values)
 
-    def get_mlf_line_df(self):
+    def get_mlf_line_df(self, pivot_values=False):
         """
         Get table of MLFLine records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MLFLine)
+        return self.get_collection_df(CollectionEnum.MLFLine, pivot_values)
 
-    def get_transformer_node_from_df(self):
+    def get_transformer_node_from_df(self, pivot_values=False):
         """
         Get table of TransformerNodeFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransformerNodeFrom)
+        return self.get_collection_df(CollectionEnum.TransformerNodeFrom, pivot_values)
 
-    def get_transformer_node_to_df(self):
+    def get_transformer_node_to_df(self, pivot_values=False):
         """
         Get table of TransformerNodeTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransformerNodeTo)
+        return self.get_collection_df(CollectionEnum.TransformerNodeTo, pivot_values)
 
-    def get_flow_control_line_df(self):
+    def get_flow_control_line_df(self, pivot_values=False):
         """
         Get table of FlowControlLine records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FlowControlLine)
+        return self.get_collection_df(CollectionEnum.FlowControlLine, pivot_values)
 
-    def get_flow_control_lines_star__df(self):
+    def get_flow_control_lines_star__df(self, pivot_values=False):
         """
         Get table of FlowControlLines_star_ records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FlowControlLines_star_)
+        return self.get_collection_df(CollectionEnum.FlowControlLines_star_, pivot_values)
 
-    def get_interface_lines_df(self):
+    def get_interface_lines_df(self, pivot_values=False):
         """
         Get table of InterfaceLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.InterfaceLines)
+        return self.get_collection_df(CollectionEnum.InterfaceLines, pivot_values)
 
-    def get_interface_transformers_df(self):
+    def get_interface_transformers_df(self, pivot_values=False):
         """
         Get table of InterfaceTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.InterfaceTransformers)
+        return self.get_collection_df(CollectionEnum.InterfaceTransformers, pivot_values)
 
-    def get_contingency_generators_df(self):
+    def get_contingency_generators_df(self, pivot_values=False):
         """
         Get table of ContingencyGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyGenerators)
+        return self.get_collection_df(CollectionEnum.ContingencyGenerators, pivot_values)
 
-    def get_contingency_lines_df(self):
+    def get_contingency_lines_df(self, pivot_values=False):
         """
         Get table of ContingencyLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyLines)
+        return self.get_collection_df(CollectionEnum.ContingencyLines, pivot_values)
 
-    def get_contingency_monitored_lines_df(self):
+    def get_contingency_monitored_lines_df(self, pivot_values=False):
         """
         Get table of ContingencyMonitoredLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyMonitoredLines)
+        return self.get_collection_df(CollectionEnum.ContingencyMonitoredLines, pivot_values)
 
-    def get_contingency_monitored_transformers_df(self):
+    def get_contingency_monitored_transformers_df(self, pivot_values=False):
         """
         Get table of ContingencyMonitoredTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyMonitoredTransformers)
+        return self.get_collection_df(CollectionEnum.ContingencyMonitoredTransformers, pivot_values)
 
-    def get_contingency_transformers_df(self):
+    def get_contingency_transformers_df(self, pivot_values=False):
         """
         Get table of ContingencyTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyTransformers)
+        return self.get_collection_df(CollectionEnum.ContingencyTransformers, pivot_values)
 
-    def get_contingency_monitored_interfaces_df(self):
+    def get_contingency_monitored_interfaces_df(self, pivot_values=False):
         """
         Get table of ContingencyMonitoredInterfaces records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ContingencyMonitoredInterfaces)
+        return self.get_collection_df(CollectionEnum.ContingencyMonitoredInterfaces, pivot_values)
 
-    def get_company_fuels_df(self):
+    def get_company_fuels_df(self, pivot_values=False):
         """
         Get table of CompanyFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CompanyFuels)
+        return self.get_collection_df(CollectionEnum.CompanyFuels, pivot_values)
 
-    def get_company_emissions_df(self):
+    def get_company_emissions_df(self, pivot_values=False):
         """
         Get table of CompanyEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CompanyEmissions)
+        return self.get_collection_df(CollectionEnum.CompanyEmissions, pivot_values)
 
-    def get_company_reserves_df(self):
+    def get_company_reserves_df(self, pivot_values=False):
         """
         Get table of CompanyReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CompanyReserves)
+        return self.get_collection_df(CollectionEnum.CompanyReserves, pivot_values)
 
-    def get_company_regions_df(self):
+    def get_company_regions_df(self, pivot_values=False):
         """
         Get table of CompanyRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CompanyRegions)
+        return self.get_collection_df(CollectionEnum.CompanyRegions, pivot_values)
 
-    def get_financial_contract_generators_df(self):
+    def get_financial_contract_generators_df(self, pivot_values=False):
         """
         Get table of FinancialContractGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractGenerators)
+        return self.get_collection_df(CollectionEnum.FinancialContractGenerators, pivot_values)
 
-    def get_financial_contract_region_df(self):
+    def get_financial_contract_region_df(self, pivot_values=False):
         """
         Get table of FinancialContractRegion records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractRegion)
+        return self.get_collection_df(CollectionEnum.FinancialContractRegion, pivot_values)
 
-    def get_financial_contract_regions_df(self):
+    def get_financial_contract_regions_df(self, pivot_values=False):
         """
         Get table of FinancialContractRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractRegions)
+        return self.get_collection_df(CollectionEnum.FinancialContractRegions, pivot_values)
 
-    def get_financial_contract_generating_companies_df(self):
+    def get_financial_contract_generating_companies_df(self, pivot_values=False):
         """
         Get table of FinancialContractGeneratingCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractGeneratingCompanies)
+        return self.get_collection_df(CollectionEnum.FinancialContractGeneratingCompanies, pivot_values)
 
-    def get_financial_contract_purchasing_companies_df(self):
+    def get_financial_contract_purchasing_companies_df(self, pivot_values=False):
         """
         Get table of FinancialContractPurchasingCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractPurchasingCompanies)
+        return self.get_collection_df(CollectionEnum.FinancialContractPurchasingCompanies, pivot_values)
 
-    def get_financial_contract_conditions_df(self):
+    def get_financial_contract_conditions_df(self, pivot_values=False):
         """
         Get table of FinancialContractConditions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.FinancialContractConditions)
+        return self.get_collection_df(CollectionEnum.FinancialContractConditions, pivot_values)
 
-    def get_transmission_right_node_from_df(self):
+    def get_transmission_right_node_from_df(self, pivot_values=False):
         """
         Get table of TransmissionRightNodeFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightNodeFrom)
+        return self.get_collection_df(CollectionEnum.TransmissionRightNodeFrom, pivot_values)
 
-    def get_transmission_right_node_to_df(self):
+    def get_transmission_right_node_to_df(self, pivot_values=False):
         """
         Get table of TransmissionRightNodeTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightNodeTo)
+        return self.get_collection_df(CollectionEnum.TransmissionRightNodeTo, pivot_values)
 
-    def get_transmission_right_zone_from_df(self):
+    def get_transmission_right_zone_from_df(self, pivot_values=False):
         """
         Get table of TransmissionRightZoneFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightZoneFrom)
+        return self.get_collection_df(CollectionEnum.TransmissionRightZoneFrom, pivot_values)
 
-    def get_transmission_right_zone_to_df(self):
+    def get_transmission_right_zone_to_df(self, pivot_values=False):
         """
         Get table of TransmissionRightZoneTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightZoneTo)
+        return self.get_collection_df(CollectionEnum.TransmissionRightZoneTo, pivot_values)
 
-    def get_transmission_right_hub_from_df(self):
+    def get_transmission_right_hub_from_df(self, pivot_values=False):
         """
         Get table of TransmissionRightHubFrom records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightHubFrom)
+        return self.get_collection_df(CollectionEnum.TransmissionRightHubFrom, pivot_values)
 
-    def get_transmission_right_hub_to_df(self):
+    def get_transmission_right_hub_to_df(self, pivot_values=False):
         """
         Get table of TransmissionRightHubTo records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightHubTo)
+        return self.get_collection_df(CollectionEnum.TransmissionRightHubTo, pivot_values)
 
-    def get_transmission_right_line_df(self):
+    def get_transmission_right_line_df(self, pivot_values=False):
         """
         Get table of TransmissionRightLine records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightLine)
+        return self.get_collection_df(CollectionEnum.TransmissionRightLine, pivot_values)
 
-    def get_transmission_right_companies_df(self):
+    def get_transmission_right_companies_df(self, pivot_values=False):
         """
         Get table of TransmissionRightCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.TransmissionRightCompanies)
+        return self.get_collection_df(CollectionEnum.TransmissionRightCompanies, pivot_values)
 
-    def get_cournot_region_df(self):
+    def get_cournot_region_df(self, pivot_values=False):
         """
         Get table of CournotRegion records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.CournotRegion)
+        return self.get_collection_df(CollectionEnum.CournotRegion, pivot_values)
 
-    def get_rsi_region_df(self):
+    def get_rsi_region_df(self, pivot_values=False):
         """
         Get table of RSIRegion records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RSIRegion)
+        return self.get_collection_df(CollectionEnum.RSIRegion, pivot_values)
 
-    def get_rsi_lines_df(self):
+    def get_rsi_lines_df(self, pivot_values=False):
         """
         Get table of RSILines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RSILines)
+        return self.get_collection_df(CollectionEnum.RSILines, pivot_values)
 
-    def get_rsi_interfaces_df(self):
+    def get_rsi_interfaces_df(self, pivot_values=False):
         """
         Get table of RSIInterfaces records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RSIInterfaces)
+        return self.get_collection_df(CollectionEnum.RSIInterfaces, pivot_values)
 
-    def get_rsi_companies_df(self):
+    def get_rsi_companies_df(self, pivot_values=False):
         """
         Get table of RSICompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.RSICompanies)
+        return self.get_collection_df(CollectionEnum.RSICompanies, pivot_values)
 
-    def get_market_capacity_generators_df(self):
+    def get_market_capacity_generators_df(self, pivot_values=False):
         """
         Get table of MarketCapacityGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketCapacityGenerators)
+        return self.get_collection_df(CollectionEnum.MarketCapacityGenerators, pivot_values)
 
-    def get_market_heat_generators_df(self):
+    def get_market_heat_generators_df(self, pivot_values=False):
         """
         Get table of MarketHeatGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketHeatGenerators)
+        return self.get_collection_df(CollectionEnum.MarketHeatGenerators, pivot_values)
 
-    def get_market_fuels_df(self):
+    def get_market_fuels_df(self, pivot_values=False):
         """
         Get table of MarketFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketFuels)
+        return self.get_collection_df(CollectionEnum.MarketFuels, pivot_values)
 
-    def get_market_emissions_df(self):
+    def get_market_emissions_df(self, pivot_values=False):
         """
         Get table of MarketEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketEmissions)
+        return self.get_collection_df(CollectionEnum.MarketEmissions, pivot_values)
 
-    def get_market_reserves_df(self):
+    def get_market_reserves_df(self, pivot_values=False):
         """
         Get table of MarketReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketReserves)
+        return self.get_collection_df(CollectionEnum.MarketReserves, pivot_values)
 
-    def get_market_gas_nodes_df(self):
+    def get_market_gas_nodes_df(self, pivot_values=False):
         """
         Get table of MarketGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketGasNodes)
+        return self.get_collection_df(CollectionEnum.MarketGasNodes, pivot_values)
 
-    def get_market_nodes_df(self):
+    def get_market_nodes_df(self, pivot_values=False):
         """
         Get table of MarketNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketNodes)
+        return self.get_collection_df(CollectionEnum.MarketNodes, pivot_values)
 
-    def get_market_companies_df(self):
+    def get_market_companies_df(self, pivot_values=False):
         """
         Get table of MarketCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.MarketCompanies)
+        return self.get_collection_df(CollectionEnum.MarketCompanies, pivot_values)
 
-    def get_constraint_generators_df(self):
+    def get_constraint_generators_df(self, pivot_values=False):
         """
         Get table of ConstraintGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGenerators)
+        return self.get_collection_df(CollectionEnum.ConstraintGenerators, pivot_values)
 
-    def get_constraint_fuels_df(self):
+    def get_constraint_fuels_df(self, pivot_values=False):
         """
         Get table of ConstraintFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintFuels)
+        return self.get_collection_df(CollectionEnum.ConstraintFuels, pivot_values)
 
-    def get_constraint_fuel_contracts_df(self):
+    def get_constraint_fuel_contracts_df(self, pivot_values=False):
         """
         Get table of ConstraintFuelContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintFuelContracts)
+        return self.get_collection_df(CollectionEnum.ConstraintFuelContracts, pivot_values)
 
-    def get_constraint_emissions_df(self):
+    def get_constraint_emissions_df(self, pivot_values=False):
         """
         Get table of ConstraintEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintEmissions)
+        return self.get_collection_df(CollectionEnum.ConstraintEmissions, pivot_values)
 
-    def get_constraint_abatements_df(self):
+    def get_constraint_abatements_df(self, pivot_values=False):
         """
         Get table of ConstraintAbatements records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintAbatements)
+        return self.get_collection_df(CollectionEnum.ConstraintAbatements, pivot_values)
 
-    def get_constraint_storages_df(self):
+    def get_constraint_storages_df(self, pivot_values=False):
         """
         Get table of ConstraintStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintStorages)
+        return self.get_collection_df(CollectionEnum.ConstraintStorages, pivot_values)
 
-    def get_constraint_waterways_df(self):
+    def get_constraint_waterways_df(self, pivot_values=False):
         """
         Get table of ConstraintWaterways records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintWaterways)
+        return self.get_collection_df(CollectionEnum.ConstraintWaterways, pivot_values)
 
-    def get_constraint_physical_contracts_df(self):
+    def get_constraint_physical_contracts_df(self, pivot_values=False):
         """
         Get table of ConstraintPhysicalContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintPhysicalContracts)
+        return self.get_collection_df(CollectionEnum.ConstraintPhysicalContracts, pivot_values)
 
-    def get_constraint_purchasers_df(self):
+    def get_constraint_purchasers_df(self, pivot_values=False):
         """
         Get table of ConstraintPurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintPurchasers)
+        return self.get_collection_df(CollectionEnum.ConstraintPurchasers, pivot_values)
 
-    def get_constraint_reserves_df(self):
+    def get_constraint_reserves_df(self, pivot_values=False):
         """
         Get table of ConstraintReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintReserves)
+        return self.get_collection_df(CollectionEnum.ConstraintReserves, pivot_values)
 
-    def get_constraint_batteries_df(self):
+    def get_constraint_batteries_df(self, pivot_values=False):
         """
         Get table of ConstraintBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintBatteries)
+        return self.get_collection_df(CollectionEnum.ConstraintBatteries, pivot_values)
 
-    def get_constraint_maintenances_df(self):
+    def get_constraint_maintenances_df(self, pivot_values=False):
         """
         Get table of ConstraintMaintenances records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintMaintenances)
+        return self.get_collection_df(CollectionEnum.ConstraintMaintenances, pivot_values)
 
-    def get_constraint_heat_plants_df(self):
+    def get_constraint_heat_plants_df(self, pivot_values=False):
         """
         Get table of ConstraintHeatPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintHeatPlants)
+        return self.get_collection_df(CollectionEnum.ConstraintHeatPlants, pivot_values)
 
-    def get_constraint_heat_nodes_df(self):
+    def get_constraint_heat_nodes_df(self, pivot_values=False):
         """
         Get table of ConstraintHeatNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintHeatNodes)
+        return self.get_collection_df(CollectionEnum.ConstraintHeatNodes, pivot_values)
 
-    def get_constraint_gas_fields_df(self):
+    def get_constraint_gas_fields_df(self, pivot_values=False):
         """
         Get table of ConstraintGasFields records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasFields)
+        return self.get_collection_df(CollectionEnum.ConstraintGasFields, pivot_values)
 
-    def get_constraint_gas_plants_df(self):
+    def get_constraint_gas_plants_df(self, pivot_values=False):
         """
         Get table of ConstraintGasPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasPlants)
+        return self.get_collection_df(CollectionEnum.ConstraintGasPlants, pivot_values)
 
-    def get_constraint_gas_pipelines_df(self):
+    def get_constraint_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of ConstraintGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasPipelines)
+        return self.get_collection_df(CollectionEnum.ConstraintGasPipelines, pivot_values)
 
-    def get_constraint_gas_nodes_df(self):
+    def get_constraint_gas_nodes_df(self, pivot_values=False):
         """
         Get table of ConstraintGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasNodes)
+        return self.get_collection_df(CollectionEnum.ConstraintGasNodes, pivot_values)
 
-    def get_constraint_gas_storages_df(self):
+    def get_constraint_gas_storages_df(self, pivot_values=False):
         """
         Get table of ConstraintGasStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasStorages)
+        return self.get_collection_df(CollectionEnum.ConstraintGasStorages, pivot_values)
 
-    def get_constraint_gas_basins_df(self):
+    def get_constraint_gas_basins_df(self, pivot_values=False):
         """
         Get table of ConstraintGasBasins records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasBasins)
+        return self.get_collection_df(CollectionEnum.ConstraintGasBasins, pivot_values)
 
-    def get_constraint_gas_contracts_df(self):
+    def get_constraint_gas_contracts_df(self, pivot_values=False):
         """
         Get table of ConstraintGasContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasContracts)
+        return self.get_collection_df(CollectionEnum.ConstraintGasContracts, pivot_values)
 
-    def get_constraint_gas_transports_df(self):
+    def get_constraint_gas_transports_df(self, pivot_values=False):
         """
         Get table of ConstraintGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintGasTransports)
+        return self.get_collection_df(CollectionEnum.ConstraintGasTransports, pivot_values)
 
-    def get_constraint_water_plants_df(self):
+    def get_constraint_water_plants_df(self, pivot_values=False):
         """
         Get table of ConstraintWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintWaterPlants)
+        return self.get_collection_df(CollectionEnum.ConstraintWaterPlants, pivot_values)
 
-    def get_constraint_water_pipelines_df(self):
+    def get_constraint_water_pipelines_df(self, pivot_values=False):
         """
         Get table of ConstraintWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintWaterPipelines)
+        return self.get_collection_df(CollectionEnum.ConstraintWaterPipelines, pivot_values)
 
-    def get_constraint_water_nodes_df(self):
+    def get_constraint_water_nodes_df(self, pivot_values=False):
         """
         Get table of ConstraintWaterNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintWaterNodes)
+        return self.get_collection_df(CollectionEnum.ConstraintWaterNodes, pivot_values)
 
-    def get_constraint_water_storages_df(self):
+    def get_constraint_water_storages_df(self, pivot_values=False):
         """
         Get table of ConstraintWaterStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintWaterStorages)
+        return self.get_collection_df(CollectionEnum.ConstraintWaterStorages, pivot_values)
 
-    def get_constraint_regions_df(self):
+    def get_constraint_regions_df(self, pivot_values=False):
         """
         Get table of ConstraintRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintRegions)
+        return self.get_collection_df(CollectionEnum.ConstraintRegions, pivot_values)
 
-    def get_constraint_zones_df(self):
+    def get_constraint_zones_df(self, pivot_values=False):
         """
         Get table of ConstraintZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintZones)
+        return self.get_collection_df(CollectionEnum.ConstraintZones, pivot_values)
 
-    def get_constraint_nodes_df(self):
+    def get_constraint_nodes_df(self, pivot_values=False):
         """
         Get table of ConstraintNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintNodes)
+        return self.get_collection_df(CollectionEnum.ConstraintNodes, pivot_values)
 
-    def get_constraint_lines_df(self):
+    def get_constraint_lines_df(self, pivot_values=False):
         """
         Get table of ConstraintLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintLines)
+        return self.get_collection_df(CollectionEnum.ConstraintLines, pivot_values)
 
-    def get_constraint_transformers_df(self):
+    def get_constraint_transformers_df(self, pivot_values=False):
         """
         Get table of ConstraintTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintTransformers)
+        return self.get_collection_df(CollectionEnum.ConstraintTransformers, pivot_values)
 
-    def get_constraint_flow_controls_df(self):
+    def get_constraint_flow_controls_df(self, pivot_values=False):
         """
         Get table of ConstraintFlowControls records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintFlowControls)
+        return self.get_collection_df(CollectionEnum.ConstraintFlowControls, pivot_values)
 
-    def get_constraint_interfaces_df(self):
+    def get_constraint_interfaces_df(self, pivot_values=False):
         """
         Get table of ConstraintInterfaces records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintInterfaces)
+        return self.get_collection_df(CollectionEnum.ConstraintInterfaces, pivot_values)
 
-    def get_constraint_companies_df(self):
+    def get_constraint_companies_df(self, pivot_values=False):
         """
         Get table of ConstraintCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintCompanies)
+        return self.get_collection_df(CollectionEnum.ConstraintCompanies, pivot_values)
 
-    def get_constraint_hubs_df(self):
+    def get_constraint_hubs_df(self, pivot_values=False):
         """
         Get table of ConstraintHubs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintHubs)
+        return self.get_collection_df(CollectionEnum.ConstraintHubs, pivot_values)
 
-    def get_constraint_markets_df(self):
+    def get_constraint_markets_df(self, pivot_values=False):
         """
         Get table of ConstraintMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintMarkets)
+        return self.get_collection_df(CollectionEnum.ConstraintMarkets, pivot_values)
 
-    def get_constraint_decision_variables_df(self):
+    def get_constraint_decision_variables_df(self, pivot_values=False):
         """
         Get table of ConstraintDecisionVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintDecisionVariables)
+        return self.get_collection_df(CollectionEnum.ConstraintDecisionVariables, pivot_values)
 
-    def get_constraint_variables_df(self):
+    def get_constraint_variables_df(self, pivot_values=False):
         """
         Get table of ConstraintVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintVariables)
+        return self.get_collection_df(CollectionEnum.ConstraintVariables, pivot_values)
 
-    def get_constraint_conditions_df(self):
+    def get_constraint_conditions_df(self, pivot_values=False):
         """
         Get table of ConstraintConditions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ConstraintConditions)
+        return self.get_collection_df(CollectionEnum.ConstraintConditions, pivot_values)
 
-    def get_decision_variable_generators_df(self):
+    def get_decision_variable_generators_df(self, pivot_values=False):
         """
         Get table of DecisionVariableGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.DecisionVariableGenerators)
+        return self.get_collection_df(CollectionEnum.DecisionVariableGenerators, pivot_values)
 
-    def get_decision_variable_nodes_df(self):
+    def get_decision_variable_nodes_df(self, pivot_values=False):
         """
         Get table of DecisionVariableNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.DecisionVariableNodes)
+        return self.get_collection_df(CollectionEnum.DecisionVariableNodes, pivot_values)
 
-    def get_decision_variable_gas_plants_df(self):
+    def get_decision_variable_gas_plants_df(self, pivot_values=False):
         """
         Get table of DecisionVariableGasPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.DecisionVariableGasPlants)
+        return self.get_collection_df(CollectionEnum.DecisionVariableGasPlants, pivot_values)
 
-    def get_decision_variable_water_plants_df(self):
+    def get_decision_variable_water_plants_df(self, pivot_values=False):
         """
         Get table of DecisionVariableWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.DecisionVariableWaterPlants)
+        return self.get_collection_df(CollectionEnum.DecisionVariableWaterPlants, pivot_values)
 
-    def get_decision_variable_definition_df(self):
+    def get_decision_variable_definition_df(self, pivot_values=False):
         """
         Get table of DecisionVariableDefinition records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.DecisionVariableDefinition)
+        return self.get_collection_df(CollectionEnum.DecisionVariableDefinition, pivot_values)
 
-    def get_variable_generators_df(self):
+    def get_variable_generators_df(self, pivot_values=False):
         """
         Get table of VariableGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableGenerators)
+        return self.get_collection_df(CollectionEnum.VariableGenerators, pivot_values)
 
-    def get_variable_fuels_df(self):
+    def get_variable_fuels_df(self, pivot_values=False):
         """
         Get table of VariableFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableFuels)
+        return self.get_collection_df(CollectionEnum.VariableFuels, pivot_values)
 
-    def get_variable_reserves_df(self):
+    def get_variable_reserves_df(self, pivot_values=False):
         """
         Get table of VariableReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableReserves)
+        return self.get_collection_df(CollectionEnum.VariableReserves, pivot_values)
 
-    def get_variable_regions_df(self):
+    def get_variable_regions_df(self, pivot_values=False):
         """
         Get table of VariableRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableRegions)
+        return self.get_collection_df(CollectionEnum.VariableRegions, pivot_values)
 
-    def get_variable_zones_df(self):
+    def get_variable_zones_df(self, pivot_values=False):
         """
         Get table of VariableZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableZones)
+        return self.get_collection_df(CollectionEnum.VariableZones, pivot_values)
 
-    def get_variable_nodes_df(self):
+    def get_variable_nodes_df(self, pivot_values=False):
         """
         Get table of VariableNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableNodes)
+        return self.get_collection_df(CollectionEnum.VariableNodes, pivot_values)
 
-    def get_variable_lines_df(self):
+    def get_variable_lines_df(self, pivot_values=False):
         """
         Get table of VariableLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableLines)
+        return self.get_collection_df(CollectionEnum.VariableLines, pivot_values)
 
-    def get_variable_interfaces_df(self):
+    def get_variable_interfaces_df(self, pivot_values=False):
         """
         Get table of VariableInterfaces records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableInterfaces)
+        return self.get_collection_df(CollectionEnum.VariableInterfaces, pivot_values)
 
-    def get_variable_storages_df(self):
+    def get_variable_storages_df(self, pivot_values=False):
         """
         Get table of VariableStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableStorages)
+        return self.get_collection_df(CollectionEnum.VariableStorages, pivot_values)
 
-    def get_variable_heat_nodes_df(self):
+    def get_variable_heat_nodes_df(self, pivot_values=False):
         """
         Get table of VariableHeatNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableHeatNodes)
+        return self.get_collection_df(CollectionEnum.VariableHeatNodes, pivot_values)
 
-    def get_variable_heat_plants_df(self):
+    def get_variable_heat_plants_df(self, pivot_values=False):
         """
         Get table of VariableHeatPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableHeatPlants)
+        return self.get_collection_df(CollectionEnum.VariableHeatPlants, pivot_values)
 
-    def get_variable_conditions_df(self):
+    def get_variable_conditions_df(self, pivot_values=False):
         """
         Get table of VariableConditions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableConditions)
+        return self.get_collection_df(CollectionEnum.VariableConditions, pivot_values)
 
-    def get_variable_variables_df(self):
+    def get_variable_variables_df(self, pivot_values=False):
         """
         Get table of VariableVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.VariableVariables)
+        return self.get_collection_df(CollectionEnum.VariableVariables, pivot_values)
 
-    def get_global_storages_df(self):
+    def get_global_storages_df(self, pivot_values=False):
         """
         Get table of GlobalStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.GlobalStorages)
+        return self.get_collection_df(CollectionEnum.GlobalStorages, pivot_values)
 
-    def get_model_scenarios_df(self):
+    def get_model_scenarios_df(self, pivot_values=False):
         """
         Get table of ModelScenarios records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelScenarios)
+        return self.get_collection_df(CollectionEnum.ModelScenarios, pivot_values)
 
-    def get_model_horizon_df(self):
+    def get_model_horizon_df(self, pivot_values=False):
         """
         Get table of ModelHorizon records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelHorizon)
+        return self.get_collection_df(CollectionEnum.ModelHorizon, pivot_values)
 
-    def get_model_report_df(self):
+    def get_model_report_df(self, pivot_values=False):
         """
         Get table of ModelReport records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelReport)
+        return self.get_collection_df(CollectionEnum.ModelReport, pivot_values)
 
-    def get_model_lt_plan_df(self):
+    def get_model_lt_plan_df(self, pivot_values=False):
         """
         Get table of ModelLTPlan records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelLTPlan)
+        return self.get_collection_df(CollectionEnum.ModelLTPlan, pivot_values)
 
-    def get_model_pasa_df(self):
+    def get_model_pasa_df(self, pivot_values=False):
         """
         Get table of ModelPASA records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelPASA)
+        return self.get_collection_df(CollectionEnum.ModelPASA, pivot_values)
 
-    def get_model_mt_schedule_df(self):
+    def get_model_mt_schedule_df(self, pivot_values=False):
         """
         Get table of ModelMTSchedule records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelMTSchedule)
+        return self.get_collection_df(CollectionEnum.ModelMTSchedule, pivot_values)
 
-    def get_model_st_schedule_df(self):
+    def get_model_st_schedule_df(self, pivot_values=False):
         """
         Get table of ModelSTSchedule records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelSTSchedule)
+        return self.get_collection_df(CollectionEnum.ModelSTSchedule, pivot_values)
 
-    def get_model_transmission_df(self):
+    def get_model_transmission_df(self, pivot_values=False):
         """
         Get table of ModelTransmission records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelTransmission)
+        return self.get_collection_df(CollectionEnum.ModelTransmission, pivot_values)
 
-    def get_model_production_df(self):
+    def get_model_production_df(self, pivot_values=False):
         """
         Get table of ModelProduction records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelProduction)
+        return self.get_collection_df(CollectionEnum.ModelProduction, pivot_values)
 
-    def get_model_competition_df(self):
+    def get_model_competition_df(self, pivot_values=False):
         """
         Get table of ModelCompetition records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelCompetition)
+        return self.get_collection_df(CollectionEnum.ModelCompetition, pivot_values)
 
-    def get_model_stochastic_df(self):
+    def get_model_stochastic_df(self, pivot_values=False):
         """
         Get table of ModelStochastic records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelStochastic)
+        return self.get_collection_df(CollectionEnum.ModelStochastic, pivot_values)
 
-    def get_model_performance_df(self):
+    def get_model_performance_df(self, pivot_values=False):
         """
         Get table of ModelPerformance records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelPerformance)
+        return self.get_collection_df(CollectionEnum.ModelPerformance, pivot_values)
 
-    def get_model_diagnostic_df(self):
+    def get_model_diagnostic_df(self, pivot_values=False):
         """
         Get table of ModelDiagnostic records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelDiagnostic)
+        return self.get_collection_df(CollectionEnum.ModelDiagnostic, pivot_values)
 
-    def get_model_interleaved_df(self):
+    def get_model_interleaved_df(self, pivot_values=False):
         """
         Get table of ModelInterleaved records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ModelInterleaved)
+        return self.get_collection_df(CollectionEnum.ModelInterleaved, pivot_values)
 
-    def get_project_models_df(self):
+    def get_project_models_df(self, pivot_values=False):
         """
         Get table of ProjectModels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ProjectModels)
+        return self.get_collection_df(CollectionEnum.ProjectModels, pivot_values)
 
-    def get_project_horizon_df(self):
+    def get_project_horizon_df(self, pivot_values=False):
         """
         Get table of ProjectHorizon records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ProjectHorizon)
+        return self.get_collection_df(CollectionEnum.ProjectHorizon, pivot_values)
 
-    def get_project_report_df(self):
+    def get_project_report_df(self, pivot_values=False):
         """
         Get table of ProjectReport records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ProjectReport)
+        return self.get_collection_df(CollectionEnum.ProjectReport, pivot_values)
 
-    def get_list_generators_df(self):
+    def get_list_generators_df(self, pivot_values=False):
         """
         Get table of ListGenerators records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGenerators)
+        return self.get_collection_df(CollectionEnum.ListGenerators, pivot_values)
 
-    def get_list_fuels_df(self):
+    def get_list_fuels_df(self, pivot_values=False):
         """
         Get table of ListFuels records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListFuels)
+        return self.get_collection_df(CollectionEnum.ListFuels, pivot_values)
 
-    def get_list_fuel_contracts_df(self):
+    def get_list_fuel_contracts_df(self, pivot_values=False):
         """
         Get table of ListFuelContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListFuelContracts)
+        return self.get_collection_df(CollectionEnum.ListFuelContracts, pivot_values)
 
-    def get_list_emissions_df(self):
+    def get_list_emissions_df(self, pivot_values=False):
         """
         Get table of ListEmissions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListEmissions)
+        return self.get_collection_df(CollectionEnum.ListEmissions, pivot_values)
 
-    def get_list_abatements_df(self):
+    def get_list_abatements_df(self, pivot_values=False):
         """
         Get table of ListAbatements records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListAbatements)
+        return self.get_collection_df(CollectionEnum.ListAbatements, pivot_values)
 
-    def get_list_storages_df(self):
+    def get_list_storages_df(self, pivot_values=False):
         """
         Get table of ListStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListStorages)
+        return self.get_collection_df(CollectionEnum.ListStorages, pivot_values)
 
-    def get_list_waterways_df(self):
+    def get_list_waterways_df(self, pivot_values=False):
         """
         Get table of ListWaterways records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterways)
+        return self.get_collection_df(CollectionEnum.ListWaterways, pivot_values)
 
-    def get_list_power_stations_df(self):
+    def get_list_power_stations_df(self, pivot_values=False):
         """
         Get table of ListPowerStations records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListPowerStations)
+        return self.get_collection_df(CollectionEnum.ListPowerStations, pivot_values)
 
-    def get_list_physical_contracts_df(self):
+    def get_list_physical_contracts_df(self, pivot_values=False):
         """
         Get table of ListPhysicalContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListPhysicalContracts)
+        return self.get_collection_df(CollectionEnum.ListPhysicalContracts, pivot_values)
 
-    def get_list_purchasers_df(self):
+    def get_list_purchasers_df(self, pivot_values=False):
         """
         Get table of ListPurchasers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListPurchasers)
+        return self.get_collection_df(CollectionEnum.ListPurchasers, pivot_values)
 
-    def get_list_reserves_df(self):
+    def get_list_reserves_df(self, pivot_values=False):
         """
         Get table of ListReserves records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListReserves)
+        return self.get_collection_df(CollectionEnum.ListReserves, pivot_values)
 
-    def get_list_batteries_df(self):
+    def get_list_batteries_df(self, pivot_values=False):
         """
         Get table of ListBatteries records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListBatteries)
+        return self.get_collection_df(CollectionEnum.ListBatteries, pivot_values)
 
-    def get_list_maintenances_df(self):
+    def get_list_maintenances_df(self, pivot_values=False):
         """
         Get table of ListMaintenances records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListMaintenances)
+        return self.get_collection_df(CollectionEnum.ListMaintenances, pivot_values)
 
-    def get_list_heat_plants_df(self):
+    def get_list_heat_plants_df(self, pivot_values=False):
         """
         Get table of ListHeatPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListHeatPlants)
+        return self.get_collection_df(CollectionEnum.ListHeatPlants, pivot_values)
 
-    def get_list_heat_nodes_df(self):
+    def get_list_heat_nodes_df(self, pivot_values=False):
         """
         Get table of ListHeatNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListHeatNodes)
+        return self.get_collection_df(CollectionEnum.ListHeatNodes, pivot_values)
 
-    def get_list_gas_fields_df(self):
+    def get_list_gas_fields_df(self, pivot_values=False):
         """
         Get table of ListGasFields records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasFields)
+        return self.get_collection_df(CollectionEnum.ListGasFields, pivot_values)
 
-    def get_list_gas_plants_df(self):
+    def get_list_gas_plants_df(self, pivot_values=False):
         """
         Get table of ListGasPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasPlants)
+        return self.get_collection_df(CollectionEnum.ListGasPlants, pivot_values)
 
-    def get_list_gas_pipelines_df(self):
+    def get_list_gas_pipelines_df(self, pivot_values=False):
         """
         Get table of ListGasPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasPipelines)
+        return self.get_collection_df(CollectionEnum.ListGasPipelines, pivot_values)
 
-    def get_list_gas_nodes_df(self):
+    def get_list_gas_nodes_df(self, pivot_values=False):
         """
         Get table of ListGasNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasNodes)
+        return self.get_collection_df(CollectionEnum.ListGasNodes, pivot_values)
 
-    def get_list_gas_storages_df(self):
+    def get_list_gas_storages_df(self, pivot_values=False):
         """
         Get table of ListGasStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasStorages)
+        return self.get_collection_df(CollectionEnum.ListGasStorages, pivot_values)
 
-    def get_list_gas_demands_df(self):
+    def get_list_gas_demands_df(self, pivot_values=False):
         """
         Get table of ListGasDemands records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasDemands)
+        return self.get_collection_df(CollectionEnum.ListGasDemands, pivot_values)
 
-    def get_list_gas_basins_df(self):
+    def get_list_gas_basins_df(self, pivot_values=False):
         """
         Get table of ListGasBasins records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasBasins)
+        return self.get_collection_df(CollectionEnum.ListGasBasins, pivot_values)
 
-    def get_list_gas_zones_df(self):
+    def get_list_gas_zones_df(self, pivot_values=False):
         """
         Get table of ListGasZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasZones)
+        return self.get_collection_df(CollectionEnum.ListGasZones, pivot_values)
 
-    def get_list_gas_contracts_df(self):
+    def get_list_gas_contracts_df(self, pivot_values=False):
         """
         Get table of ListGasContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasContracts)
+        return self.get_collection_df(CollectionEnum.ListGasContracts, pivot_values)
 
-    def get_list_gas_transports_df(self):
+    def get_list_gas_transports_df(self, pivot_values=False):
         """
         Get table of ListGasTransports records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGasTransports)
+        return self.get_collection_df(CollectionEnum.ListGasTransports, pivot_values)
 
-    def get_list_water_plants_df(self):
+    def get_list_water_plants_df(self, pivot_values=False):
         """
         Get table of ListWaterPlants records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterPlants)
+        return self.get_collection_df(CollectionEnum.ListWaterPlants, pivot_values)
 
-    def get_list_water_pipelines_df(self):
+    def get_list_water_pipelines_df(self, pivot_values=False):
         """
         Get table of ListWaterPipelines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterPipelines)
+        return self.get_collection_df(CollectionEnum.ListWaterPipelines, pivot_values)
 
-    def get_list_water_nodes_df(self):
+    def get_list_water_nodes_df(self, pivot_values=False):
         """
         Get table of ListWaterNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterNodes)
+        return self.get_collection_df(CollectionEnum.ListWaterNodes, pivot_values)
 
-    def get_list_water_storages_df(self):
+    def get_list_water_storages_df(self, pivot_values=False):
         """
         Get table of ListWaterStorages records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterStorages)
+        return self.get_collection_df(CollectionEnum.ListWaterStorages, pivot_values)
 
-    def get_list_water_demands_df(self):
+    def get_list_water_demands_df(self, pivot_values=False):
         """
         Get table of ListWaterDemands records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterDemands)
+        return self.get_collection_df(CollectionEnum.ListWaterDemands, pivot_values)
 
-    def get_list_water_zones_df(self):
+    def get_list_water_zones_df(self, pivot_values=False):
         """
         Get table of ListWaterZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListWaterZones)
+        return self.get_collection_df(CollectionEnum.ListWaterZones, pivot_values)
 
-    def get_list_regions_df(self):
+    def get_list_regions_df(self, pivot_values=False):
         """
         Get table of ListRegions records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListRegions)
+        return self.get_collection_df(CollectionEnum.ListRegions, pivot_values)
 
-    def get_list_zones_df(self):
+    def get_list_zones_df(self, pivot_values=False):
         """
         Get table of ListZones records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListZones)
+        return self.get_collection_df(CollectionEnum.ListZones, pivot_values)
 
-    def get_list_nodes_df(self):
+    def get_list_nodes_df(self, pivot_values=False):
         """
         Get table of ListNodes records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListNodes)
+        return self.get_collection_df(CollectionEnum.ListNodes, pivot_values)
 
-    def get_list_lines_df(self):
+    def get_list_lines_df(self, pivot_values=False):
         """
         Get table of ListLines records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListLines)
+        return self.get_collection_df(CollectionEnum.ListLines, pivot_values)
 
-    def get_list_ml_fs_df(self):
+    def get_list_ml_fs_df(self, pivot_values=False):
         """
         Get table of ListMLFs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListMLFs)
+        return self.get_collection_df(CollectionEnum.ListMLFs, pivot_values)
 
-    def get_list_transformers_df(self):
+    def get_list_transformers_df(self, pivot_values=False):
         """
         Get table of ListTransformers records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListTransformers)
+        return self.get_collection_df(CollectionEnum.ListTransformers, pivot_values)
 
-    def get_list_flow_controls_df(self):
+    def get_list_flow_controls_df(self, pivot_values=False):
         """
         Get table of ListFlowControls records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListFlowControls)
+        return self.get_collection_df(CollectionEnum.ListFlowControls, pivot_values)
 
-    def get_list_interfaces_df(self):
+    def get_list_interfaces_df(self, pivot_values=False):
         """
         Get table of ListInterfaces records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListInterfaces)
+        return self.get_collection_df(CollectionEnum.ListInterfaces, pivot_values)
 
-    def get_list_contingencies_df(self):
+    def get_list_contingencies_df(self, pivot_values=False):
         """
         Get table of ListContingencies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListContingencies)
+        return self.get_collection_df(CollectionEnum.ListContingencies, pivot_values)
 
-    def get_list_companies_df(self):
+    def get_list_companies_df(self, pivot_values=False):
         """
         Get table of ListCompanies records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListCompanies)
+        return self.get_collection_df(CollectionEnum.ListCompanies, pivot_values)
 
-    def get_list_financial_contracts_df(self):
+    def get_list_financial_contracts_df(self, pivot_values=False):
         """
         Get table of ListFinancialContracts records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListFinancialContracts)
+        return self.get_collection_df(CollectionEnum.ListFinancialContracts, pivot_values)
 
-    def get_list_hubs_df(self):
+    def get_list_hubs_df(self, pivot_values=False):
         """
         Get table of ListHubs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListHubs)
+        return self.get_collection_df(CollectionEnum.ListHubs, pivot_values)
 
-    def get_list_transmission_rights_df(self):
+    def get_list_transmission_rights_df(self, pivot_values=False):
         """
         Get table of ListTransmissionRights records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListTransmissionRights)
+        return self.get_collection_df(CollectionEnum.ListTransmissionRights, pivot_values)
 
-    def get_list_cournots_df(self):
+    def get_list_cournots_df(self, pivot_values=False):
         """
         Get table of ListCournots records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListCournots)
+        return self.get_collection_df(CollectionEnum.ListCournots, pivot_values)
 
-    def get_list_rs_is_df(self):
+    def get_list_rs_is_df(self, pivot_values=False):
         """
         Get table of ListRSIs records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListRSIs)
+        return self.get_collection_df(CollectionEnum.ListRSIs, pivot_values)
 
-    def get_list_markets_df(self):
+    def get_list_markets_df(self, pivot_values=False):
         """
         Get table of ListMarkets records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListMarkets)
+        return self.get_collection_df(CollectionEnum.ListMarkets, pivot_values)
 
-    def get_list_constraints_df(self):
+    def get_list_constraints_df(self, pivot_values=False):
         """
         Get table of ListConstraints records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListConstraints)
+        return self.get_collection_df(CollectionEnum.ListConstraints, pivot_values)
 
-    def get_list_decision_variables_df(self):
+    def get_list_decision_variables_df(self, pivot_values=False):
         """
         Get table of ListDecisionVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListDecisionVariables)
+        return self.get_collection_df(CollectionEnum.ListDecisionVariables, pivot_values)
 
-    def get_list_data_files_df(self):
+    def get_list_data_files_df(self, pivot_values=False):
         """
         Get table of ListDataFiles records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListDataFiles)
+        return self.get_collection_df(CollectionEnum.ListDataFiles, pivot_values)
 
-    def get_list_variables_df(self):
+    def get_list_variables_df(self, pivot_values=False):
         """
         Get table of ListVariables records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListVariables)
+        return self.get_collection_df(CollectionEnum.ListVariables, pivot_values)
 
-    def get_list_timeslices_df(self):
+    def get_list_timeslices_df(self, pivot_values=False):
         """
         Get table of ListTimeslices records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListTimeslices)
+        return self.get_collection_df(CollectionEnum.ListTimeslices, pivot_values)
 
-    def get_list_globals_df(self):
+    def get_list_globals_df(self, pivot_values=False):
         """
         Get table of ListGlobals records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListGlobals)
+        return self.get_collection_df(CollectionEnum.ListGlobals, pivot_values)
 
-    def get_list_scenarios_df(self):
+    def get_list_scenarios_df(self, pivot_values=False):
         """
         Get table of ListScenarios records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListScenarios)
+        return self.get_collection_df(CollectionEnum.ListScenarios, pivot_values)
 
-    def get_list_lists_df(self):
+    def get_list_lists_df(self, pivot_values=False):
         """
         Get table of ListLists records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ListLists)
+        return self.get_collection_df(CollectionEnum.ListLists, pivot_values)
 
-    def get_report_lists_df(self):
+    def get_report_lists_df(self, pivot_values=False):
         """
         Get table of ReportLists records
         :return: DataFrame
         """
-        return self.get_collection_df(plx_enums.CollectionEnum.ReportLists)
-
+        return self.get_collection_df(CollectionEnum.ReportLists, pivot_values)
 
 
 if __name__ == '__main__':
@@ -3292,6 +3478,6 @@ if __name__ == '__main__':
 
     xfo_df = plexos_db.get_system_transformers_df()
 
-    nodes_df = plexos_db.get_system_nodes_df()
+    nodes_df = plexos_db.get_system_nodes_df(pivot_values=True)
 
     print()

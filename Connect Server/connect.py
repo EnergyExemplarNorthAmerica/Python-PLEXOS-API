@@ -18,8 +18,8 @@ import PLEXOS7_NET.Core as plx
 from EEUTILITY.Enums import *
 from System import *
 
-server =   input('Server:          ')
-port =     input('Port (def:8888): ')
+server = input('Server:          ')
+port = input('Port (def:8888): ')
 try:
     port = int(port)
 except:
@@ -41,7 +41,7 @@ for folder in [''] + list(cxn.GetFolders()):
     for dataset in list(cxn.GetDatasets(folder))[:5]:
         idx += 1
         print('\t', dataset)
-        for version in list(cxn.GetDatasetVersions(folder,dataset))[-4:-1]:
+        for version in list(cxn.GetDatasetVersions(folder, dataset))[-4:-1]:
             print('\t\t', version)
         if idx >= 10: break # only list 10 datasets (takes too long)
 

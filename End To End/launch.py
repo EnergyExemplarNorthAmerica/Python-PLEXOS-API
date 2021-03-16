@@ -32,7 +32,7 @@ def parse_logfile(pattern, foldername, modelname, linecount = 1):
 def main():
     run_model(plexos_path, 'test.xml', '.', 'Base')
     for res in parse_logfile('ST Schedule Completed', '.', 'Base', 25):
-        print res
+        print(res)
         
 if __name__ == '__main__':
     main()

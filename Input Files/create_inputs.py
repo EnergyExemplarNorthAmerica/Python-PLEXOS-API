@@ -12,7 +12,15 @@ import sys
 import clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+__program_files__ = os.environ["ProgramFiles(x86)"]
+__plexos_base_folder__ = os.path.join(__program_files__, 'Energy Exemplar', 'PLEXOS 8.0')
+
+
+if os.path.exists(__plexos_base_folder__):
+
+    # load PLEXOS assemblies
+    sys.path.append(__plexos_base_folder__)
+
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -60,14 +68,14 @@ def add_plexos_prop(db, parent_class_id, child_class_id, collection_id,
     	String strPropertyName
     	)
     '''
-    enum_id = db.PropertyName2EnumId( \
-        Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id), \
-        Enum.GetName(clr.GetClrType(ClassEnum), child_class_id), \
-        Enum.GetName(clr.GetClrType(ClassEnum), child_class_id)+'s', \
-        prop_name)
+    enum_id = db.PropertyName2EnumId(Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id),
+                                     Enum.GetName(clr.GetClrType(ClassEnum), child_class_id),
+                                     Enum.GetName(clr.GetClrType(ClassEnum), child_class_id)+'s',
+                                     prop_name)
 
-    db.AddProperty(mem_id, enum_id, 1, prop_value, None, None, None, \
-              None, None, None, 0, PeriodEnum.Interval)
+    db.AddProperty(mem_id, enum_id, 1, prop_value,
+                   None, None, None, None, None, None,
+                   0, PeriodEnum.Interval)
     
 # delete the modified file if it already exists
 if os.path.exists('new.xml'):
@@ -126,16 +134,16 @@ Int32 AddMembership(
 	String strChild
 	)
 '''
-db.AddMembership(CollectionEnum.GeneratorNodes,'A1','A')
-db.AddMembership(CollectionEnum.GeneratorNodes,'A2','A')
-db.AddMembership(CollectionEnum.GeneratorNodes,'B1','B')
-db.AddMembership(CollectionEnum.GeneratorNodes,'B2','B')
+db.AddMembership(CollectionEnum.GeneratorNodes, 'A1', 'A')
+db.AddMembership(CollectionEnum.GeneratorNodes, 'A2', 'A')
+db.AddMembership(CollectionEnum.GeneratorNodes, 'B1', 'B')
+db.AddMembership(CollectionEnum.GeneratorNodes, 'B2', 'B')
 
-db.AddMembership(CollectionEnum.NodeRegion,'A','A')
-db.AddMembership(CollectionEnum.NodeRegion,'B','B')
+db.AddMembership(CollectionEnum.NodeRegion, 'A', 'A')
+db.AddMembership(CollectionEnum.NodeRegion, 'B', 'B')
 
-db.AddMembership(CollectionEnum.LineNodeFrom,'AB','A')
-db.AddMembership(CollectionEnum.LineNodeTo,'AB','B')
+db.AddMembership(CollectionEnum.LineNodeFrom, 'AB', 'A')
+db.AddMembership(CollectionEnum.LineNodeTo, 'AB', 'B')
 
 # save the data set
 db.Close()
