@@ -21,7 +21,7 @@ if os.path.exists(__plexos_base_folder__):
 
     # .NET related imports
     import PLEXOS7_NET.Core as plx
-    from EEUTILITY.Enums import CollectionEnum, ClassEnum, PeriodEnum
+    from EEUTILITY.Enums import CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum
     from System import Enum  # do not delete, used in other modules
     print('Plexos API loaded')
 

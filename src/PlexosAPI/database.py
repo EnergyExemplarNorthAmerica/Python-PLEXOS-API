@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum
+from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum
 
 
 class PlexosDatabase:
@@ -146,7 +146,7 @@ class PlexosDatabase:
                         prop_name='Load',
                         prop_value=0)
 
-    def add_node(self, name, region=None, zone=None, V=1, P=None, Pmax=None, category='Nodes'):
+    def add_node(self, name, region=None, zone=None, V=1, P=None, Pmax=None, lat=None, lon=None, category='Nodes'):
         """
         Add node to Database
         :param name: Node name
@@ -155,6 +155,8 @@ class PlexosDatabase:
         :param V: Nominal voltage (kV)
         :param P: Fixed power (MW)
         :param Pmax: Maximum injection power (MW)
+        :param lat: Latitude (degrees)
+        :param lon: Longitude (degrees)
         :param category: Node category
         """
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
@@ -168,19 +170,27 @@ class PlexosDatabase:
             add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
                             'System', name, 'Max Net Injection', Pmax, category)
 
+        if lat is not None:
+            self.db.AddAttribute(ClassEnum.Node, name, NodeAttributeEnum.Latitude, lat)
+
+        if lon is not None:
+            self.db.AddAttribute(ClassEnum.Node, name, NodeAttributeEnum.Longitude, lon)
+
         if region is not None:
             self.db.AddMembership(CollectionEnum.NodeRegion, name, region)
 
         if zone is not None:
             self.db.AddMembership(CollectionEnum.NodeZone, name, zone)
 
-    def add_generator(self, node, name, units=1, max_capacity=9999, fuel_price=1, heat_rate=1, category='Thermal'):
+    def add_generator(self, node, name, units=1, max_capacity=9999, min_stable_level=0,
+                      fuel_price=1, heat_rate=1, category='Thermal'):
         """
-
+        Add Generator to the DataBase
         :param node:
         :param name:
         :param units:
         :param max_capacity:
+        :param min_stable_level:
         :param fuel_price:
         :param heat_rate:
         :param category:
@@ -193,6 +203,9 @@ class PlexosDatabase:
                         'System', name, 'Max Capacity', max_capacity)
 
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
+                        'System', name, 'Min Stable Level', min_stable_level)
+
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
                         'System', name, 'Fuel Price', fuel_price)
 
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
@@ -200,26 +213,53 @@ class PlexosDatabase:
 
         self.db.AddMembership(CollectionEnum.GeneratorNodes, name, node)
 
-    def add_line(self, node_from, node_to, name, rate, r, x, b):
+    def add_battery(self, node, name, units=1, capacity=99999, max_power=99999,
+                    initial_soc=0.5, charge_efficiency=0.98, category='Storage'):
+        """
+        Add Battery to the DataBase
+        :param node:
+        :param name:
+        :param units:
+        :param capacity:
+        :param max_power:
+        :param initial_soc:
+        :param charge_efficiency:
+        :param category:
+        :return:
+        """
+        # add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
+        #                 'System', name, 'Units', units, category)
+
+        # add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
+        #                 'System', name, 'Charge Efficiency', charge_efficiency)
+
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
+                        'System', name, 'Capacity', capacity)
+
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
+                        'System', name, 'Max Power', max_power)
+
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
+                        'System', name, 'Initial SoC', initial_soc)
+
+        self.db.AddMembership(CollectionEnum.BatteryNode, name, node)
+
+    def add_line(self, node_from, node_to, name, r, x, b, max_flow=99999, min_flow=-99999,
+                 overload_min_rating=None, overload_max_rating=None, category=''):
         """
         Add line to the Database
         :param node_from: name of the node from
         :param node_to: name of the node to
         :param name: name of the line
-        :param rate: Rating (MW)
         :param r: Resistence (p.u.)
         :param x: Reactance (p.u.)
         :param b: Susceptance (p.u.)
-        :return:
+        :param max_flow: Maximum allowed flow (MW)
+        :param min_flow: Minimum allowed flow  (MW) (may be negative)
+        :param overload_max_rating: Maximum contingency flow  (MW)
+        :param overload_min_rating: Minimum contingency flow  (MW) (may be negative)
+        :param category: line category
         """
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Line,
-                        collection_id=CollectionEnum.SystemLines,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Max Flow',
-                        prop_value=rate)
 
         add_plexos_prop(db=self.db,
                         parent_class_id=ClassEnum.System,
@@ -228,7 +268,8 @@ class PlexosDatabase:
                         parent_name='System',
                         child_name=name,
                         prop_name='Resistance',
-                        prop_value=r)
+                        prop_value=r,
+                        category=category)
 
         add_plexos_prop(db=self.db,
                         parent_class_id=ClassEnum.System,
@@ -248,10 +289,24 @@ class PlexosDatabase:
                         prop_name='Susceptance',
                         prop_value=b)
 
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
+                        'System', name, 'Max Flow', max_flow)
+
+        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
+                        'System', name, 'Min Flow', min_flow)
+
+        if overload_max_rating is not None:
+            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
+                            'System', name, 'Overload Max Rating', overload_max_rating)
+
+        if overload_min_rating is not None:
+            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
+                            'System', name, 'Overload Min Rating', overload_min_rating)
+
         self.db.AddMembership(CollectionEnum.LineNodeFrom, name, node_from)
         self.db.AddMembership(CollectionEnum.LineNodeTo, name, node_to)
 
-    def add_transformer(self, node_from, node_to, name, rate, r, x, b):
+    def add_transformer(self, node_from, node_to, name, rate, r, x, b, category=''):
         """
         Add transformer to the Database
         :param node_from: name of the node from
@@ -269,8 +324,9 @@ class PlexosDatabase:
                         collection_id=CollectionEnum.SystemTransformers,
                         parent_name='System',
                         child_name=name,
-                        prop_name='Max Flow',
-                        prop_value=rate)
+                        prop_name='Rating',
+                        prop_value=rate,
+                        category=category)
 
         add_plexos_prop(db=self.db,
                         parent_class_id=ClassEnum.System,
