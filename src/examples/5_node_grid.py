@@ -8,7 +8,7 @@ db = PlexosDatabase(file_name=file_name, force_new=True)
 db.add_region('R1')
 
 # nodes
-db.add_node('bus1', region='R1', V=10, Pload=0, Pmax=30, lat=1, lon=1, category='Nodes')
+db.add_node('bus1', region='R1', V=10, Pload=0, Pmax=30, lat=1, lon=1, category='Nodes', is_slack=True)
 db.add_node('bus2', region='R1', V=10, Pload=0, Pmax=999, lat=1, lon=1, category='Nodes')
 db.add_node('bus3', region='R1', V=10, Pload=0, Pmax=999, lat=1, lon=1, category='Nodes')
 db.add_node('bus4', region='R1', V=10, Pload=10, Pmax=999, lat=1, lon=1, category='Nodes')

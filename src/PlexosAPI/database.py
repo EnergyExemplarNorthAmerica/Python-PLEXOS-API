@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import clr
-from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, \
+from PlexosAPI.api import plx, Enum, run_model, parse_logfile, \
     CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum, ClassEnumType
 
 
@@ -216,6 +216,124 @@ class PlexosDatabase:
                             None, None, None, data_file, None, None,
                             0, PeriodEnum.Interval)
 
+    def remove_property(self, child_class_id, collection_id, child_name, prop_name, prop_value,
+                        parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
+        """
+        Remove property to an existing object
+        :param child_class_id: value from ClassEnum
+        :param collection_id: value from CollectionEnum
+        :param child_name: name of the object
+        :param prop_name: name of the property
+        :param prop_value: value of the property
+        :param parent_class_id: parent class, normally ClassEnum.System
+        :param parent_name: name of the parent class, normally 'System'
+        :param data_file: Datafile of the property (None if none...)
+        """
+
+        '''
+        Int32 GetMembershipID(CollectionEnum nCollectionId,
+                              String strParent,
+                              String strChild)
+        '''
+        mem_id = self.db.GetMembershipID(collection_id, parent_name, child_name)
+
+        '''
+        Int32 PropertyName2EnumId(String strParentClassName,
+                                  String strChildClassName,
+                                  String strCollectionName,
+                                  String strPropertyName )
+        '''
+        enum_id = self.db.PropertyName2EnumId(Enum.GetName(ClassEnumType, parent_class_id),
+                                              Enum.GetName(ClassEnumType, child_class_id),
+                                              Enum.GetName(ClassEnumType, child_class_id) + 's',
+                                              prop_name)
+
+        '''
+        Int32 RemoveProperty(Int32 MembershipId,
+                             Int32 EnumId,
+                             Int32 BandId,
+                             Double Value,
+                             Object DateFrom,
+                             Object DateTo,
+                             Object Variable,
+                             Object DataFile,
+                             Object Pattern,
+                             Object Scenario,
+                             Object Action,
+                             PeriodEnum PeriodTypeId)                                               
+        '''
+        self.db.RemoveProperty(mem_id, enum_id, 1, prop_value,
+                               None, None, None, data_file, None, None,
+                               0, PeriodEnum.Interval)
+
+    def modify_property(self, child_class_id, collection_id, child_name, prop_name, prop_value,
+                        parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
+        """
+        Modify property to an existing object
+        :param child_class_id: value from ClassEnum
+        :param collection_id: value from CollectionEnum
+        :param child_name: name of the object
+        :param prop_name: name of the property
+        :param prop_value: value of the property
+        :param parent_class_id: parent class, normally ClassEnum.System
+        :param parent_name: name of the parent class, normally 'System'
+        :param data_file: Datafile of the property (None if none...)
+        """
+
+        '''
+        Int32 GetMembershipID(CollectionEnum nCollectionId,
+                              String strParent,
+                              String strChild)
+        '''
+        mem_id = self.db.GetMembershipID(collection_id, parent_name, child_name)
+
+        '''
+        Int32 PropertyName2EnumId(String strParentClassName,
+                                  String strChildClassName,
+                                  String strCollectionName,
+                                  String strPropertyName )
+        '''
+        enum_id = self.db.PropertyName2EnumId(Enum.GetName(ClassEnumType, parent_class_id),
+                                              Enum.GetName(ClassEnumType, child_class_id),
+                                              Enum.GetName(ClassEnumType, child_class_id) + 's',
+                                              prop_name)
+
+        '''
+        Int32 RemoveProperty(Int32 MembershipId,
+                             Int32 EnumId,
+                             Int32 BandId,
+                             Double Value,
+                             Object DateFrom,
+                             Object DateTo,
+                             Object Variable,
+                             Object DataFile,
+                             Object Pattern,
+                             Object Scenario,
+                             Object Action,
+                             PeriodEnum PeriodTypeId)                                               
+        '''
+        self.db.RemoveProperty(mem_id, enum_id, 1, prop_value,
+                               None, None, None, data_file, None, None,
+                               0, PeriodEnum.Interval)
+
+        '''
+        Int32 AddProperty(Int32 MembershipId,
+                          Int32 EnumId,
+                          Int32 BandId,
+                          Double Value,
+                          Object DateFrom,
+                          Object DateTo,
+                          Object Variable,
+                          Object DataFile,
+                          Object Pattern,
+                          Object Scenario,
+                          Object Action,
+                          PeriodEnum PeriodTypeId)                                               
+        '''
+        self.db.AddProperty(mem_id, enum_id, 1, prop_value,
+                            None, None, None, data_file, None, None,
+                            0, PeriodEnum.Interval)
+
     def add_or_update_attribute(self, class_enum, name, property_enum, value):
         """
         Add or update attribute
@@ -233,17 +351,11 @@ class PlexosDatabase:
         Add Region
         :param name: region name
         """
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Region,
-                        collection_id=CollectionEnum.SystemRegions,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Load',
-                        prop_value=0)
+
+        self.add_object(ClassEnum.Region, name, category='')
 
     def add_node(self, name, region=None, zone=None, V=None, Pload=None, Pgen=None, Pmax=None,
-                 lat=None, lon=None, is_slack=False, category='Nodes'):
+                 lat=None, lon=None, is_slack=None, Pload_file=None, Pgen_file=None, category='Nodes'):
         """
         Add node to Database
         :param name: Node name
@@ -256,27 +368,28 @@ class PlexosDatabase:
         :param lat: Latitude (degrees)
         :param lon: Longitude (degrees)
         :param is_slack: Is slack?
+        :param Pload_file: File path to the csv file containing the fixed load profile for the object
+        :param Pgen_file: File path to the csv file containing the fixed generation profile for the object
         :param category: Node category
         """
 
         self.add_object(ClassEnum.Node, name, category)
 
         if V is not None:
-            '''
-            db, parent_class_id, child_class_id, collection_id,
-                    parent_name, child_name, prop_name, prop_value,
-                    category=''
-            '''
             self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
                               'Voltage', V, data_file=None)
 
+        if is_slack is not None:
+            self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
+                              'Is Slack Bus', int(is_slack), data_file=None)
+
         if Pload is not None:
             self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Fixed Load', Pload, data_file=None)
+                              'Fixed Load', Pload, data_file=Pload_file)
 
         if Pgen is not None:
             self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Fixed Generation', Pgen, data_file=None)
+                              'Fixed Generation', Pgen, data_file=Pgen_file)
 
         if Pmax is not None:
             self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
@@ -341,20 +454,23 @@ class PlexosDatabase:
         :param category:
         :return:
         """
-        # add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
-        #                 'System', name, 'Units', units, category)
+        self.add_object(ClassEnum.Battery, name, category)
 
-        # add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
-        #                 'System', name, 'Charge Efficiency', charge_efficiency)
+        self.add_property(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
+                          'Units', units, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
-                        'System', name, 'Capacity', capacity)
+        self.add_property(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
+                          'Charge Efficiency', charge_efficiency, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
-                        'System', name, 'Max Power', max_power)
+        self.add_property(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
+                          'Capacity', capacity, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Battery, CollectionEnum.SystemBatteries,
-                        'System', name, 'Initial SoC', initial_soc)
+        self.add_property(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
+                          'Max Power', max_power, data_file=None)
+
+        self.add_property(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
+                          'Initial SoC', initial_soc, data_file=None)
+
 
         self.db.AddMembership(CollectionEnum.BatteryNode, name, node)
 

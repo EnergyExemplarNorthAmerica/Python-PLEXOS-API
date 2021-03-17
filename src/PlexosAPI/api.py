@@ -24,7 +24,7 @@ if os.path.exists(__plexos_base_folder__):
 
     # .NET related imports
     import PLEXOS7_NET.Core as plx
-    from EEUTILITY.Enums import CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum
+    from EEUTILITY.Enums import *
     from System import Enum  # do not delete, used in other modules
 
     ClassEnumType = clr.GetClrType(ClassEnum)
@@ -109,68 +109,6 @@ def __run__():
     run_model('test.xml', '.', 'Base')
     for res in parse_logfile('ST Schedule Completed', '.', 'Base', 25):
         print(res)
-
-
-def add_plexos_prop(db, parent_class_id, child_class_id, collection_id,
-                    parent_name, child_name, prop_name, prop_value,
-                    category=''):
-    """
-    Create a plexos object and populate some system properties.
-    :param db: Plexos database instance
-    :param parent_class_id:
-    :param child_class_id:
-    :param collection_id:
-    :param parent_name:
-    :param child_name:
-    :param prop_name:
-    :param prop_value:
-    :param category:
-    :return:
-    """
-
-    '''
-    
-    '''
-
-    # Add the category if it hasn't been added yet
-    cats = db.GetCategories(child_class_id)
-    if len(category) > 0:
-        if cats is None or category not in db.GetCategories(child_class_id):
-            db.AddCategory(child_class_id, category)
-
-    # Add the object if it hasn't been added yet
-    objs = db.GetObjects(child_class_id)
-    if objs is None or child_name not in objs:
-        if len(category) > 0:
-            db.AddObject(child_name, child_class_id, True, category, 'Added from Python')
-        else:
-            db.AddObject(child_name, child_class_id, True, '', 'Added from Python')
-
-    '''
-    Int32 GetMembershipID(
-    	CollectionEnum nCollectionId,
-    	String strParent,
-    	String strChild
-    	)
-    '''
-    mem_id = db.GetMembershipID(collection_id, parent_name, child_name)
-    '''
-    Int32 PropertyName2EnumId(
-    	String strParentClassName,
-    	String strChildClassName,
-    	String strCollectionName,
-    	String strPropertyName
-    	)
-    '''
-    enum_id = db.PropertyName2EnumId(Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id),
-                                     Enum.GetName(clr.GetClrType(ClassEnum), child_class_id),
-                                     Enum.GetName(clr.GetClrType(ClassEnum), child_class_id) + 's',
-                                     prop_name)
-
-    db.AddProperty(mem_id, enum_id, 1, prop_value,
-                   None, None, None, None, None, None,
-                   0, PeriodEnum.Interval)
-
 
 
 if __name__ == '__main__':
