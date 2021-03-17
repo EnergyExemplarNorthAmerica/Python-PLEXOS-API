@@ -8,8 +8,11 @@ from shutil import copyfile
 import subprocess as sp
 
 
-__program_files__ = os.environ["ProgramFiles(x86)"]
-__plexos_base_folder__ = os.path.join(__program_files__, 'Energy Exemplar', 'PLEXOS 8.0')
+# __program_files__ = os.environ["ProgramFiles(x86)"]
+# __plexos_base_folder__ = os.path.join(__program_files__, 'Energy Exemplar', 'PLEXOS 8.0')
+
+__this_dir__ = os.path.dirname(os.path.realpath(__file__))
+__plexos_base_folder__ = os.path.join(__this_dir__, 'dlls', '8.0')
 
 
 if os.path.exists(__plexos_base_folder__):
