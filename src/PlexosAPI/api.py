@@ -21,7 +21,7 @@ if os.path.exists(__plexos_base_folder__):
 
     # .NET related imports
     import PLEXOS7_NET.Core as plx
-    from EEUTILITY.Enums import CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum
+    from EEUTILITY.Enums import CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum
     from System import Enum  # do not delete, used in other modules
     print('Plexos API loaded')
 
@@ -108,9 +108,22 @@ def __run__():
 def add_plexos_prop(db, parent_class_id, child_class_id, collection_id,
                     parent_name, child_name, prop_name, prop_value,
                     category=''):
+    """
+    Create a plexos object and populate some system properties.
+    :param db: Plexos database instance
+    :param parent_class_id:
+    :param child_class_id:
+    :param collection_id:
+    :param parent_name:
+    :param child_name:
+    :param prop_name:
+    :param prop_value:
+    :param category:
+    :return:
+    """
+
     '''
-    Create a simple plexos object and populate some
-    system properties.
+    
     '''
 
     # Add the category if it hasn't been added yet

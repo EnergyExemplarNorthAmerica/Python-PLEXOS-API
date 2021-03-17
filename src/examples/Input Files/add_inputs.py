@@ -73,8 +73,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     	String strChild
     	)    
     '''
-    mem_id = db.GetMembershipID(CollectionEnum.SystemGenerators, \
-                                'System', 'ApiGen')
+    mem_id = db.GetMembershipID(CollectionEnum.SystemGenerators, 'System', 'ApiGen')
                                 
     # Add properties
     '''
@@ -94,9 +93,9 @@ if os.path.exists('rts_PLEXOS.xml'):
     	)   
     '''
     # a. An alias for AddProperty
-    db.AddProperty(mem_id, int(SystemGeneratorsEnum.Units), \
-              1, 0.0, None, None, None, None, None, None, \
-              0, PeriodEnum.Interval)
+    db.AddProperty(mem_id, int(SystemGeneratorsEnum.Units), 1, 0.0,
+                   None, None, None, None, None, None,
+                   0, PeriodEnum.Interval)
     
     # save the data set
     db.Close()

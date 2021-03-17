@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum
+from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum
 
 
 class PlexosDatabase:
@@ -132,6 +132,12 @@ class PlexosDatabase:
         else:
             return None
 
+    def add_or_update_attribute(self, class_enum, name, property_enum, value):
+
+        if not self.db.UpdateAttribute(class_enum, name, property_enum, value):
+            # if we cannot update it, add it
+            self.db.AddAttribute(class_enum, name, property_enum, value)
+
     def add_region(self, name):
         """
         Add Region
@@ -146,7 +152,8 @@ class PlexosDatabase:
                         prop_name='Load',
                         prop_value=0)
 
-    def add_node(self, name, region=None, zone=None, V=1, P=None, Pmax=None, lat=None, lon=None, category='Nodes'):
+    def add_node(self, name, region=None, zone=None, V=1, P=None, Pmax=None, lat=None, lon=None, is_slack=False,
+                 category='Nodes'):
         """
         Add node to Database
         :param name: Node name
@@ -157,6 +164,7 @@ class PlexosDatabase:
         :param Pmax: Maximum injection power (MW)
         :param lat: Latitude (degrees)
         :param lon: Longitude (degrees)
+        :param is_slack: Is slack?
         :param category: Node category
         """
         add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
@@ -171,10 +179,10 @@ class PlexosDatabase:
                             'System', name, 'Max Net Injection', Pmax, category)
 
         if lat is not None:
-            self.db.AddAttribute(ClassEnum.Node, name, NodeAttributeEnum.Latitude, lat)
+            self.add_or_update_attribute(ClassEnum.Node, name, NodeAttributeEnum.Latitude, lat)
 
         if lon is not None:
-            self.db.AddAttribute(ClassEnum.Node, name, NodeAttributeEnum.Longitude, lon)
+            self.add_or_update_attribute(ClassEnum.Node, name, NodeAttributeEnum.Longitude, lon)
 
         if region is not None:
             self.db.AddMembership(CollectionEnum.NodeRegion, name, region)

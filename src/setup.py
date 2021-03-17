@@ -25,8 +25,8 @@ if os.path.exists(os.path.join(here, '..', 'README.md')):
 else:
     long_description = ''
 
-if os.path.exists(os.path.join(here, '..', 'doc', 'about.rst')):
-    with open(os.path.join(here, '..', 'doc', 'about.rst'), encoding='utf-8') as f:
+if os.path.exists(os.path.join(here, '..', 'docs', 'about.rst')):
+    with open(os.path.join(here, '..', 'docs', 'about.rst'), encoding='utf-8') as f:
         description = f.read()
 else:
     description = ''
@@ -37,6 +37,7 @@ packages = find_packages(exclude=['docs', 'test', 'research', 'tests'])
 package_data = {}
 
 dependencies = ["pythonnet",
+                "numpy",
                 "pandas",
                 "wheel"]
 
@@ -100,11 +101,11 @@ setup(
 
     # This should be your name or the name of the organization which owns the
     # project.
-    author='Santiago Peñate Vera',  # Optional
+    author='Steven Broad, Santiago Peñate Vera',  # Optional
 
     # This should be a valid email address corresponding to the author listed
     # above.
-    author_email='santiago.penate@ree.es',  # Optional
+    author_email='steven.broad@energyexemplar.com, santiago.penate@ree.es',  # Optional
 
     # Classifiers help users find your project by categorizing it.
     #

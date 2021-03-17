@@ -46,7 +46,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     '''
     db.CopyObject('Q1 DA', 'APIModel', ClassEnum.Model)
     db.CopyObject('Q1 DA', 'APIHorizon', ClassEnum.Horizon)
-    
+
     '''
     Int32 RemoveMembership(
     	CollectionEnum nCollectionId,
@@ -79,12 +79,12 @@ if os.path.exists('rts_PLEXOS.xml'):
     '''    
     # a list of tuples... these tuples match the signature of UpdateAttribute and AddAttribute
     #   i.e., (ClassEnum, String, Int32, Double)
-    attr = [(ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.DateFrom, DateTime(2024,1,1).ToOADate()), \
-            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.StepType, 4.0), \
-            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.StepCount, 1.0), \
-            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoDateFrom, DateTime(2024,2,15).ToOADate()), \
-            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoStepType, 2.0), \
-            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoAtaTime, 3.0), \
+    attr = [(ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.DateFrom, DateTime(2024, 1, 1).ToOADate()),
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.StepType, 4.0),
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.StepCount, 1.0),
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoDateFrom, DateTime(2024, 2, 15).ToOADate()),
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoStepType, 2.0),
+            (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoAtaTime, 3.0),
             (ClassEnum.Horizon, 'APIHorizon', HorizonAttributeEnum.ChronoStepCount, 4.0)]
 
     # loop through the attributes to add/update    
