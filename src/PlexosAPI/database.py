@@ -1,6 +1,8 @@
 import os
 import pandas as pd
-from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum
+import clr
+from PlexosAPI.api import plx, Enum, run_model, parse_logfile, add_plexos_prop, \
+    CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum, ClassEnumType
 
 
 class PlexosDatabase:
@@ -148,11 +150,14 @@ class PlexosDatabase:
     def add_object(self, child_class_id, child_name, category='', ):
         """
         Add the object if it hasn't been added yet
-        :param child_class_id:
-        :param child_name:
-        :param category:
-        :return:
+        :param child_class_id: value from ClassEnum
+        :param child_name: name of the object
+        :param category: Category name, it it does not exist, it is created
         """
+
+        # create category if it does not exist
+        self.add_category(child_class_id, category)
+
         #
         objs = self.db.GetObjects(child_class_id)
         if objs is None or child_name not in objs:
@@ -161,25 +166,26 @@ class PlexosDatabase:
             else:
                 self.db.AddObject(child_name, child_class_id, True, '', 'Added from Python')
 
-    def add_property(self, child_class_id, collection_id, child_name, prop_name, prop_value, parent_class_id='System'):
+    def add_property(self, child_class_id, collection_id, child_name, prop_name, prop_value,
+                     parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
         """
-
-        :param child_class_id:
-        :param collection_id:
-        :param child_name:
-        :param prop_name:
-        :param prop_value:
-        :param parent_class_id:
-        :return:
+        Add property to an existing object
+        :param child_class_id: value from ClassEnum
+        :param collection_id: value from CollectionEnum
+        :param child_name: name of the object
+        :param prop_name: name of the property
+        :param prop_value: value of the property
+        :param parent_class_id: parent class, normally ClassEnum.System
+        :param parent_name: name of the parent class, normally 'System'
+        :param data_file: Datafile of the property (None if none...)
         """
-
 
         '''
         Int32 GetMembershipID(CollectionEnum nCollectionId,
                               String strParent,
                               String strChild)
         '''
-        mem_id = self.db.GetMembershipID(collection_id, parent_class_id, child_name)
+        mem_id = self.db.GetMembershipID(collection_id, parent_name, child_name)
 
         '''
         Int32 PropertyName2EnumId(String strParentClassName,
@@ -187,23 +193,36 @@ class PlexosDatabase:
                                   String strCollectionName,
                                   String strPropertyName )
         '''
-        enum_id = self.db.PropertyName2EnumId(Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id),
-                                         Enum.GetName(clr.GetClrType(ClassEnum), child_class_id),
-                                         Enum.GetName(clr.GetClrType(ClassEnum), child_class_id) + 's',
-                                         prop_name)
+        enum_id = self.db.PropertyName2EnumId(Enum.GetName(ClassEnumType, parent_class_id),
+                                              Enum.GetName(ClassEnumType, child_class_id),
+                                              Enum.GetName(ClassEnumType, child_class_id) + 's',
+                                              prop_name)
 
+        '''
+        Int32 AddProperty(Int32 MembershipId,
+                          Int32 EnumId,
+                          Int32 BandId,
+                          Double Value,
+                          Object DateFrom,
+                          Object DateTo,
+                          Object Variable,
+                          Object DataFile,
+                          Object Pattern,
+                          Object Scenario,
+                          Object Action,
+                          PeriodEnum PeriodTypeId)                                               
+        '''
         self.db.AddProperty(mem_id, enum_id, 1, prop_value,
-                            None, None, None, None, None, None,
+                            None, None, None, data_file, None, None,
                             0, PeriodEnum.Interval)
 
     def add_or_update_attribute(self, class_enum, name, property_enum, value):
         """
-
-        :param class_enum:
-        :param name:
-        :param property_enum:
-        :param value:
-        :return:
+        Add or update attribute
+        :param class_enum: value from ClassEnum
+        :param name: name of the object
+        :param property_enum: Value from the corresponding property enumeration
+        :param value: value of the attribute
         """
         if not self.db.UpdateAttribute(class_enum, name, property_enum, value):
             # if we cannot update it, add it
@@ -223,31 +242,45 @@ class PlexosDatabase:
                         prop_name='Load',
                         prop_value=0)
 
-    def add_node(self, name, region=None, zone=None, V=1, P=None, Pmax=None, lat=None, lon=None, is_slack=False,
-                 category='Nodes'):
+    def add_node(self, name, region=None, zone=None, V=None, Pload=None, Pgen=None, Pmax=None,
+                 lat=None, lon=None, is_slack=False, category='Nodes'):
         """
         Add node to Database
         :param name: Node name
         :param region: Node Region
         :param zone: Node Zone
         :param V: Nominal voltage (kV)
-        :param P: Fixed power (MW)
+        :param Pload: Fixed load power (MW)
+        :param Pgen: Fixed generation power (MW)
         :param Pmax: Maximum injection power (MW)
         :param lat: Latitude (degrees)
         :param lon: Longitude (degrees)
         :param is_slack: Is slack?
         :param category: Node category
         """
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
-                        'System', name, 'Voltage', V, category)
 
-        if P is not None:
-            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
-                            'System', name, 'Fixed Load', P, category)
+        self.add_object(ClassEnum.Node, name, category)
+
+        if V is not None:
+            '''
+            db, parent_class_id, child_class_id, collection_id,
+                    parent_name, child_name, prop_name, prop_value,
+                    category=''
+            '''
+            self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
+                              'Voltage', V, data_file=None)
+
+        if Pload is not None:
+            self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
+                              'Fixed Load', Pload, data_file=None)
+
+        if Pgen is not None:
+            self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
+                              'Fixed Generation', Pgen, data_file=None)
 
         if Pmax is not None:
-            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes,
-                            'System', name, 'Max Net Injection', Pmax, category)
+            self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
+                              'Max Net Injection', Pmax, data_file=None)
 
         if lat is not None:
             self.add_or_update_attribute(ClassEnum.Node, name, NodeAttributeEnum.Latitude, lat)
@@ -275,20 +308,22 @@ class PlexosDatabase:
         :param category:
         :return:
         """
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
-                        'System', name, 'Units', units, category)
+        self.add_object(ClassEnum.Generator, name, category)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
-                        'System', name, 'Max Capacity', max_capacity)
+        self.add_property(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
+                          'Units', units, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
-                        'System', name, 'Min Stable Level', min_stable_level)
+        self.add_property(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
+                          'Max Capacity', max_capacity, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
-                        'System', name, 'Fuel Price', fuel_price)
+        self.add_property(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
+                          'Min Stable Level', min_stable_level, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators,
-                        'System', name, 'Heat Rate', heat_rate)
+        self.add_property(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
+                          'Fuel Price', fuel_price, data_file=None)
+
+        self.add_property(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
+                          'Heat Rate', heat_rate, data_file=None)
 
         self.db.AddMembership(CollectionEnum.GeneratorNodes, name, node)
 
@@ -340,47 +375,30 @@ class PlexosDatabase:
         :param category: line category
         """
 
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Line,
-                        collection_id=CollectionEnum.SystemLines,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Resistance',
-                        prop_value=r,
-                        category=category)
+        self.add_object(ClassEnum.Line, name, category)
 
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Line,
-                        collection_id=CollectionEnum.SystemLines,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Reactance',
-                        prop_value=x)
+        self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                          'Resistance', r, data_file=None)
 
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Line,
-                        collection_id=CollectionEnum.SystemLines,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Susceptance',
-                        prop_value=b)
+        self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                          'Reactance', x, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
-                        'System', name, 'Max Flow', max_flow)
+        self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                          'Susceptance', b, data_file=None)
 
-        add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
-                        'System', name, 'Min Flow', min_flow)
+        self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                          'Max Flow', max_flow, data_file=None)
+
+        self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                          'Min Flow', min_flow, data_file=None)
 
         if overload_max_rating is not None:
-            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
-                            'System', name, 'Overload Max Rating', overload_max_rating)
+            self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                              'Overload Max Rating', overload_max_rating, data_file=None)
 
         if overload_min_rating is not None:
-            add_plexos_prop(self.db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines,
-                            'System', name, 'Overload Min Rating', overload_min_rating)
+            self.add_property(ClassEnum.Line, CollectionEnum.SystemLines, name,
+                              'Overload Min Rating', overload_min_rating, data_file=None)
 
         self.db.AddMembership(CollectionEnum.LineNodeFrom, name, node_from)
         self.db.AddMembership(CollectionEnum.LineNodeTo, name, node_to)
@@ -395,44 +413,22 @@ class PlexosDatabase:
         :param r: Resistence (p.u.)
         :param x: Reactance (p.u.)
         :param b: Susceptance (p.u.)
+        :param category: Category of the transformer
         :return:
         """
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Transformer,
-                        collection_id=CollectionEnum.SystemTransformers,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Rating',
-                        prop_value=rate,
-                        category=category)
+        self.add_object(ClassEnum.Transformer, name, category)
 
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Transformer,
-                        collection_id=CollectionEnum.SystemTransformers,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Resistance',
-                        prop_value=r)
+        self.add_property(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
+                          'Resistance', r, data_file=None)
 
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Transformer,
-                        collection_id=CollectionEnum.SystemTransformers,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Reactance',
-                        prop_value=x)
+        self.add_property(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
+                          'Reactance', x, data_file=None)
 
-        add_plexos_prop(db=self.db,
-                        parent_class_id=ClassEnum.System,
-                        child_class_id=ClassEnum.Transformer,
-                        collection_id=CollectionEnum.SystemTransformers,
-                        parent_name='System',
-                        child_name=name,
-                        prop_name='Susceptance',
-                        prop_value=b)
+        self.add_property(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
+                          'Susceptance', b, data_file=None)
+
+        self.add_property(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
+                          'Rating', rate, data_file=None)
 
         self.db.AddMembership(CollectionEnum.TransformerNodeFrom, name, node_from)
         self.db.AddMembership(CollectionEnum.TransformerNodeTo, name, node_to)

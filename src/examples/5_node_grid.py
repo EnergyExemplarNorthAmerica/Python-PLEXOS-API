@@ -8,11 +8,11 @@ db = PlexosDatabase(file_name=file_name, force_new=True)
 db.add_region('R1')
 
 # nodes
-db.add_node('bus1', region='R1', V=10, P=0, Pmax=30, lat=1, lon=1, category='Nodes')
-db.add_node('bus2', region='R1', V=10, P=0, Pmax=999, lat=1, lon=1, category='Nodes')
-db.add_node('bus3', region='R1', V=10, P=0, Pmax=999, lat=1, lon=1, category='Nodes')
-db.add_node('bus4', region='R1', V=10, P=10, Pmax=999, lat=1, lon=1, category='Nodes')
-db.add_node('bus5', region='R1', V=50, P=30, Pmax=999, lat=1, lon=1, category='Nodes')
+db.add_node('bus1', region='R1', V=10, Pload=0, Pmax=30, lat=1, lon=1, category='Nodes')
+db.add_node('bus2', region='R1', V=10, Pload=0, Pmax=999, lat=1, lon=1, category='Nodes')
+db.add_node('bus3', region='R1', V=10, Pload=0, Pmax=999, lat=1, lon=1, category='Nodes')
+db.add_node('bus4', region='R1', V=10, Pload=10, Pmax=999, lat=1, lon=1, category='Nodes')
+db.add_node('bus5', region='R1', V=50, Pload=30, Pmax=999, lat=1, lon=1, category='Nodes')
 
 # lines
 db.add_line('bus1', 'bus2', name='L1_2', r=0.001, x=0.05, b=0.002, max_flow=100, min_flow=-100)
