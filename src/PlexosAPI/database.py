@@ -132,8 +132,79 @@ class PlexosDatabase:
         else:
             return None
 
-    def add_or_update_attribute(self, class_enum, name, property_enum, value):
+    def add_category(self, child_class_id, category):
+        """
+        Add the category if it hasn't been added yet
+        :param child_class_id:
+        :param category:
+        :return:
+        """
+        #
+        cats = self.db.GetCategories(child_class_id)
+        if len(category) > 0:
+            if cats is None or category not in self.db.GetCategories(child_class_id):
+                self.db.AddCategory(child_class_id, category)
 
+    def add_object(self, child_class_id, child_name, category='', ):
+        """
+        Add the object if it hasn't been added yet
+        :param child_class_id:
+        :param child_name:
+        :param category:
+        :return:
+        """
+        #
+        objs = self.db.GetObjects(child_class_id)
+        if objs is None or child_name not in objs:
+            if len(category) > 0:
+                self.db.AddObject(child_name, child_class_id, True, category, 'Added from Python')
+            else:
+                self.db.AddObject(child_name, child_class_id, True, '', 'Added from Python')
+
+    def add_property(self, child_class_id, collection_id, child_name, prop_name, prop_value, parent_class_id='System'):
+        """
+
+        :param child_class_id:
+        :param collection_id:
+        :param child_name:
+        :param prop_name:
+        :param prop_value:
+        :param parent_class_id:
+        :return:
+        """
+
+
+        '''
+        Int32 GetMembershipID(CollectionEnum nCollectionId,
+                              String strParent,
+                              String strChild)
+        '''
+        mem_id = self.db.GetMembershipID(collection_id, parent_class_id, child_name)
+
+        '''
+        Int32 PropertyName2EnumId(String strParentClassName,
+                                  String strChildClassName,
+                                  String strCollectionName,
+                                  String strPropertyName )
+        '''
+        enum_id = self.db.PropertyName2EnumId(Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id),
+                                         Enum.GetName(clr.GetClrType(ClassEnum), child_class_id),
+                                         Enum.GetName(clr.GetClrType(ClassEnum), child_class_id) + 's',
+                                         prop_name)
+
+        self.db.AddProperty(mem_id, enum_id, 1, prop_value,
+                            None, None, None, None, None, None,
+                            0, PeriodEnum.Interval)
+
+    def add_or_update_attribute(self, class_enum, name, property_enum, value):
+        """
+
+        :param class_enum:
+        :param name:
+        :param property_enum:
+        :param value:
+        :return:
+        """
         if not self.db.UpdateAttribute(class_enum, name, property_enum, value):
             # if we cannot update it, add it
             self.db.AddAttribute(class_enum, name, property_enum, value)
