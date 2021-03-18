@@ -15,6 +15,7 @@ clr.AddReference('EEUTILITY')
 from PLEXOS7_NET.Core import DatabaseCore, Solution, PLEXOSConnect
 from EEUTILITY.Enums import *
 
+
 def update_dataset(original_ds, new_ds):
     if os.path.exists(original_ds):
 

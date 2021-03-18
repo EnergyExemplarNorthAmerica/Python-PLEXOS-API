@@ -1,18 +1,24 @@
+"""
+PLEXOS Database wrapper for easy interaction
+
+The Database object allows to read and write PLEXOS .xml file easily
+
+Santiago Peñate-Vera, Red Eléctrica de España 2021
+"""
 import os
 import pandas as pd
-import clr
 from PlexosAPI.api import plx, Enum, run_model, parse_logfile, \
     CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum, ClassEnumType
 
 
 class PlexosDatabase:
 
-    def __init__(self, file_name, output_folder='.', model_name='Base', force_new=False):
+    def __init__(self, file_name, output_folder='.', force_new=False):
         """
         Database constructor, it opens or creates a Plexos DataBase
-        :param file_name: Plexos .xml file name
-        :param output_folder:
-        :param model_name:
+        :param file_name: PLEXOS .xml file name
+        :param output_folder: folder where to store the results
+
         """
 
         # file name
@@ -23,9 +29,6 @@ class PlexosDatabase:
             self.output_folder = os.path.dirname(self.file_name)
         else:
             self.output_folder = output_folder
-
-        # the model internal name
-        self.model_name = model_name
 
         # database connection
         self.db = plx.DatabaseCore()
@@ -45,13 +48,14 @@ class PlexosDatabase:
         """
         self.db.Close()
 
-    def run(self):
+    def run(self, model_name='Base'):
         """
         Run model and print the logs while it lasts
+        :param model_name: Name of the model to run
         :return: Nothing
         """
-        run_model(self.file_name, self.output_folder, self.model_name)
-        for res in parse_logfile('ST Schedule Completed', self.output_folder, self.model_name, 25):
+        run_model(self.file_name, self.output_folder, model_name)
+        for res in parse_logfile('ST Schedule Completed', self.output_folder, model_name, 25):
             print(res)
 
     def get_collection_names(self, collection):
@@ -411,15 +415,14 @@ class PlexosDatabase:
                       fuel_price=1, heat_rate=1, category='Thermal'):
         """
         Add Generator to the DataBase
-        :param node:
-        :param name:
-        :param units:
-        :param max_capacity:
-        :param min_stable_level:
-        :param fuel_price:
-        :param heat_rate:
-        :param category:
-        :return:
+        :param node: Name of the node where to connect the generator
+        :param name: Name of the generator
+        :param units: Number of equal generation units
+        :param max_capacity: Maximum generator capacity (MW)
+        :param min_stable_level: Minimum Generation Capacity (MW)
+        :param fuel_price: Fuel price ($/GJ)
+        :param heat_rate: Heat rate efficiency (GJ/MWh)
+        :param category: Generator category
         """
         self.add_object(ClassEnum.Generator, name, category)
 
@@ -470,7 +473,6 @@ class PlexosDatabase:
 
         self.add_property(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
                           'Initial SoC', initial_soc, data_file=None)
-
 
         self.db.AddMembership(CollectionEnum.BatteryNode, name, node)
 
