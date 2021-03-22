@@ -1,4 +1,10 @@
+"""
+PLEXOS API wrapper for easy interaction
 
+The API wraps the low level interaction like loading the .net Dll's, etc.
+
+Santiago Peñate-Vera, Red Eléctrica de España 2021
+"""
 
 import os
 import sys
@@ -25,7 +31,7 @@ if os.path.exists(__plexos_base_folder__):
     # .NET related imports
     import PLEXOS7_NET.Core as plx
     from EEUTILITY.Enums import *
-    from System import Enum  # do not delete, used in other modules
+    from System import Enum  # do not delete, this is used in other modules
 
     ClassEnumType = clr.GetClrType(ClassEnum)
 
@@ -103,12 +109,6 @@ def parse_logfile(pattern, folder_name, model_name, line_count=1):
             retval = '\n'.join(lines)
             lines = []
             yield retval
-
-
-def __run__():
-    run_model('test.xml', '.', 'Base')
-    for res in parse_logfile('ST Schedule Completed', '.', 'Base', 25):
-        print(res)
 
 
 if __name__ == '__main__':

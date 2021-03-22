@@ -358,7 +358,7 @@ class PlexosDatabase:
 
         self.add_object(ClassEnum.Region, name, category='')
 
-    def add_node(self, name, region=None, zone=None, V=None, Pload=None, Pgen=None, Pmax=None,
+    def add_node(self, name, region=None, zone=None, V=None, Pload=None, Pgen=None, Pmax=None, load_participation_factor=None,
                  lat=None, lon=None, is_slack=None, Pload_file=None, Pgen_file=None, category='Nodes'):
         """
         Add node to Database
@@ -398,6 +398,10 @@ class PlexosDatabase:
         if Pmax is not None:
             self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
                               'Max Net Injection', Pmax, data_file=None)
+
+        if load_participation_factor is not None:
+            self.add_property(ClassEnum.Node, CollectionEnum.SystemNodes, name,
+                              'Load Participation Factor', load_participation_factor, data_file=None)
 
         if lat is not None:
             self.add_or_update_attribute(ClassEnum.Node, name, NodeAttributeEnum.Latitude, lat)
