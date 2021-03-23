@@ -1,3 +1,10 @@
+"""
+PLEXOS API wrapper for easy interaction
+
+The API wraps the low level interaction like loading the .net Dll's, etc.
+
+Santiago Peñate-Vera, Red Eléctrica de España 2021
+"""
 from PlexosAPI.api import plx
 
 

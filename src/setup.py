@@ -36,7 +36,7 @@ packages = find_packages(exclude=['docs', 'test', 'research', 'tests'])
 
 package_data = {}
 
-dependencies = ["pythonnet",
+dependencies = ["pythonnet",  # the package that contains "clr"
                 "numpy",
                 "pandas",
                 "wheel"]
@@ -137,7 +137,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='power systems planning',  # Optional
+    keywords='Plexos',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
@@ -157,7 +157,7 @@ setup(
     # and refuse to install the project if the version does not match. If you
     # do not support Python 2, you can simplify this to '>=3.5' or similar, see
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is

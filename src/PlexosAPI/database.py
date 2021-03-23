@@ -5,6 +5,7 @@ The Database object allows to read and write PLEXOS .xml file easily
 
 Santiago Peñate-Vera, Red Eléctrica de España 2021
 """
+
 import os
 import pandas as pd
 from PlexosAPI.api import plx, Enum, run_model, parse_logfile, \
