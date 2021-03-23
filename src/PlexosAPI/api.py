@@ -96,7 +96,10 @@ def parse_logfile(pattern, folder_name, model_name, line_count=1):
     lines = []
     regex = re.compile(pattern)
 
-    fname = os.path.join(folder_name, 'Model {} Solution'.format(model_name), 'Model ( {} ) Log.txt'.format(model_name))
+    fname = os.path.join(folder_name,
+                         'Model {} Solution'.format(model_name),
+                         'Model ( {} ) Log.txt'.format(model_name))
+    
     for line in open(fname):
         if len(regex.findall(line)) > 0:
             current_lines = line_count
