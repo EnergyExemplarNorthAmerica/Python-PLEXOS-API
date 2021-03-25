@@ -24,8 +24,6 @@ def test1():
             -	En el objeto Generador, categoría NUCLEAR, generador ‘Nuclear ES00’:
                 -	Units: 3
                 -	Max Capacity: valor de potencia de la PEMMDB / nº unidades. En el ejemplo, 3054.31 / 3 = 1016.71 MW
-
-
     '''
 
     # PEMMDB values
@@ -51,8 +49,6 @@ def test2():
             Min Stable Level: porcentaje que aparece en la PEMMDB * (potencia instalada total que
             aparece en la PEMMBD (columna C) / nº de unidades (columna D)) / 100.
             En el ejemplo: 40 * (3054.31 / 3) / 100 = 407.24 MW.
-
-
     :return:
     '''
 
@@ -78,7 +74,6 @@ def test3():
         o	En el objeto Generador, categoría NUCLEAR, generador ‘Nuclear ES00’:
             	Max Ramp Up: valor que aparece en la PEMMDB (columna AK) / 60. En el ejemplo: 3055.54 / 60 = 50.93 MW/min
             	Max Ramp Down: valor que aparece en la PEMMDB (columna AL) / 60. En el ejemplo: 3055.54 / 60 = 50.93 MW/min
-
     :return:
     """
 

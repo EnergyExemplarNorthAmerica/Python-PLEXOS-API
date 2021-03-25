@@ -1,7 +1,7 @@
 from PlexosAPI import PlexosDatabase
 
-# must have the full path, otherwise it will complain about the folder not existing
-file_name = r'C:\Users\penversa\Git\Python-PLEXOS-API\src\examples\my_5_node_grid.xml'
+# must have the full path or explicit relative path, otherwise it will complain about the folder not existing
+file_name = r'.\my_5_node_grid.xml'
 
 db = PlexosDatabase(file_name=file_name, force_new=True)
 
