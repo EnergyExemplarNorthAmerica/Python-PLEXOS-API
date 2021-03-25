@@ -26,6 +26,7 @@ db.add_generator('bus1', name='G1', units=1, max_capacity=50, fuel_price=10.5, h
 db.add_generator('bus3', name='G3', units=1, max_capacity=50, fuel_price=3.0, heat_rate=8, category='Fuel')
 
 # battery
-# db.add_battery('bus2', name='G2', units=1, capacity=20, max_power=10.5, initial_soc=0.8, charge_efficiency=0.99, category='Storage')
+db.add_battery('bus2', name='G2', units=1, capacity=20, max_power=10.5, initial_soc=80,
+               charge_efficiency=99, category='Storage')
 
 db.close()

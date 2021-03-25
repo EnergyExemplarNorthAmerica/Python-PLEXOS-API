@@ -9,7 +9,8 @@ Santiago Peñate-Vera, Red Eléctrica de España 2021
 import os
 import pandas as pd
 from PlexosAPI.api import plx, Enum, run_model, parse_logfile, \
-    CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum, ClassEnumType
+    CollectionEnum, ClassEnum, PeriodEnum, NodeAttributeEnum, SystemNodesEnum, ClassEnumType, \
+    SystemBatteriesEnum, SystemGeneratorsEnum, SystemLinesEnum, SystemTransformersEnum
 
 
 class PlexosDatabase:
@@ -169,7 +170,7 @@ class PlexosDatabase:
             if len(category) > 0:
                 self.db.AddObject(child_name, child_class_id, True, category, 'Added from Python')
             else:
-                self.db.AddObject(child_name, child_class_id, True, '', 'Added from Python')
+                self.db.AddObject(child_name, child_class_id, True, None, 'Added from Python')
 
     def add_property(self, collection_id, child_name, enum_id, prop_value,
                      parent_name='System', data_file=None):
@@ -258,8 +259,8 @@ class PlexosDatabase:
                             None, None, None, data_file, None, None,
                             0, PeriodEnum.Interval)
 
-    def remove_property(self, child_class_id, collection_id, child_name, prop_name, prop_value,
-                        parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
+    def remove_property_by_name(self, child_class_id, collection_id, child_name, prop_name, prop_value,
+                                parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
         """
         Remove property to an existing object
         :param child_class_id: value from ClassEnum
@@ -308,8 +309,8 @@ class PlexosDatabase:
                                None, None, None, data_file, None, None,
                                0, PeriodEnum.Interval)
 
-    def modify_property(self, child_class_id, collection_id, child_name, prop_name, prop_value,
-                        parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
+    def modify_property_by_name(self, child_class_id, collection_id, child_name, prop_name, prop_value,
+                                parent_class_id=ClassEnum.System, parent_name='System', data_file=None):
         """
         Modify property to an existing object
         :param child_class_id: value from ClassEnum
@@ -415,37 +416,40 @@ class PlexosDatabase:
         :param category: Node category
         """
 
-        self.add_object(ClassEnum.Node, name, category)
+        child_class_id = ClassEnum.Node
+        collection_id = CollectionEnum.SystemNodes
+
+        self.add_object(child_class_id, name, category)
 
         if V is not None:
-            self.add_property_by_name(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Voltage', V, data_file=None)
+            self.add_property(collection_id, name, int(SystemNodesEnum.Voltage),
+                              V, data_file=None)
 
         if is_slack is not None:
-            self.add_property_by_name(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Is Slack Bus', int(is_slack), data_file=None)
+            self.add_property(collection_id, name, int(SystemNodesEnum.IsSlackBus),
+                              int(is_slack), data_file=None)
 
         if Pload is not None:
-            self.add_property_by_name(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Fixed Load', Pload, data_file=Pload_file)
+            self.add_property(collection_id, name, int(SystemNodesEnum.FixedLoad),
+                              Pload, data_file=Pload_file)
 
         if Pgen is not None:
-            self.add_property_by_name(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Fixed Generation', Pgen, data_file=Pgen_file)
+            self.add_property(collection_id, name, int(SystemNodesEnum.FixedGeneration),
+                              Pgen, data_file=Pgen_file)
 
         if Pmax is not None:
-            self.add_property_by_name(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Max Net Injection', Pmax, data_file=None)
+            self.add_property(collection_id, name, int(SystemNodesEnum.MaxNetInjection),
+                              Pmax, data_file=None)
 
         if load_participation_factor is not None:
-            self.add_property_by_name(ClassEnum.Node, CollectionEnum.SystemNodes, name,
-                              'Load Participation Factor', load_participation_factor, data_file=None)
+            self.add_property(collection_id, name, int(SystemNodesEnum.LoadParticipationFactor),
+                              load_participation_factor, data_file=None)
 
         if lat is not None:
-            self.add_or_update_attribute(ClassEnum.Node, name, NodeAttributeEnum.Latitude, lat)
+            self.add_or_update_attribute(child_class_id, name, NodeAttributeEnum.Latitude, lat)
 
         if lon is not None:
-            self.add_or_update_attribute(ClassEnum.Node, name, NodeAttributeEnum.Longitude, lon)
+            self.add_or_update_attribute(child_class_id, name, NodeAttributeEnum.Longitude, lon)
 
         if region is not None:
             self.db.AddMembership(CollectionEnum.NodeRegion, name, region)
@@ -466,59 +470,80 @@ class PlexosDatabase:
         :param heat_rate: Heat rate efficiency (GJ/MWh)
         :param category: Generator category
         """
-        self.add_object(ClassEnum.Generator, name, category)
 
-        self.add_property_by_name(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
-                          'Units', units, data_file=None)
+        child_class_id = ClassEnum.Generator
+        collection_id = CollectionEnum.SystemGenerators
 
-        self.add_property_by_name(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
-                          'Max Capacity', max_capacity, data_file=None)
+        self.add_object(child_class_id, name, category)
 
-        self.add_property_by_name(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
-                          'Min Stable Level', min_stable_level, data_file=None)
+        self.add_property(collection_id, name, int(SystemGeneratorsEnum.Units),
+                          units, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
-                          'Fuel Price', fuel_price, data_file=None)
+        self.add_property(collection_id, name, int(SystemGeneratorsEnum.MaxCapacity),
+                          max_capacity, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Generator, CollectionEnum.SystemGenerators, name,
-                          'Heat Rate', heat_rate, data_file=None)
+        self.add_property(collection_id, name, int(SystemGeneratorsEnum.MinStableLevel),
+                          min_stable_level, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemGeneratorsEnum.FuelPrice),
+                          fuel_price, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemGeneratorsEnum.HeatRate),
+                          heat_rate, data_file=None)
 
         self.db.AddMembership(CollectionEnum.GeneratorNodes, name, node)
 
     def add_battery(self, node, name, units=1, capacity=99999, max_power=99999,
-                    initial_soc=0.5, charge_efficiency=0.98, category='Storage'):
+                    initial_soc=50, charge_efficiency=98, discharge_efficiency=99,
+                    min_soc=30, max_soc=100,
+                    category='Storage'):
         """
         Add Battery to the DataBase
-        :param node:
-        :param name:
-        :param units:
-        :param capacity:
-        :param max_power:
-        :param initial_soc:
-        :param charge_efficiency:
-        :param category:
-        :return:
+        :param node: Name of the node where the battery is connected
+        :param name: Name of the battery
+        :param units: Number of battery units
+        :param capacity: Capacity of the battery (MWh)
+        :param max_power: maximum power of the battery (MW)
+        :param initial_soc: Initial state of charge (%)
+        :param charge_efficiency: Charge efficiency (%)
+        :param discharge_efficiency: Discharge efficiency (%)
+        :param min_soc: Minimum state of charge (%)
+        :param max_soc: Maximum state of charge (%)
+        :param category: Category of the battery
         """
-        self.add_object(ClassEnum.Battery, name, category)
 
-        self.add_property_by_name(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
-                          'Units', units, data_file=None)
+        child_class_id = ClassEnum.Battery
+        collection_id = CollectionEnum.SystemBatteries
 
-        self.add_property_by_name(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
-                          'Charge Efficiency', charge_efficiency, data_file=None)
+        self.add_object(child_class_id, name, category)
 
-        self.add_property_by_name(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
-                          'Capacity', capacity, data_file=None)
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.Units),
+                          units, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
-                          'Max Power', max_power, data_file=None)
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.ChargeEfficiency),
+                          charge_efficiency, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Battery, CollectionEnum.SystemBatteries, name,
-                          'Initial SoC', initial_soc, data_file=None)
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.DischargeEfficiency),
+                          discharge_efficiency, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.Capacity),
+                          capacity, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.MaxPower),
+                          max_power, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.InitialSoC),
+                          initial_soc, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.MaxSoC),
+                          max_soc, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemBatteriesEnum.MinSoC),
+                          min_soc, data_file=None)
 
         self.db.AddMembership(CollectionEnum.BatteryNode, name, node)
 
-    def add_line(self, node_from, node_to, name, r, x, b, max_flow=99999, min_flow=-99999,
+    def add_line(self, node_from, node_to, name, r, x, b, units=1, max_flow=99999, min_flow=-99999,
                  overload_min_rating=None, overload_max_rating=None, category=''):
         """
         Add line to the Database
@@ -528,6 +553,7 @@ class PlexosDatabase:
         :param r: Resistence (p.u.)
         :param x: Reactance (p.u.)
         :param b: Susceptance (p.u.)
+        :param units: Number of parallel units, if zero means disconnected
         :param max_flow: Maximum allowed flow (MW)
         :param min_flow: Minimum allowed flow  (MW) (may be negative)
         :param overload_max_rating: Maximum contingency flow  (MW)
@@ -535,35 +561,42 @@ class PlexosDatabase:
         :param category: line category
         """
 
-        self.add_object(ClassEnum.Line, name, category)
+        child_class_id = ClassEnum.Line
+        collection_id = CollectionEnum.SystemLines
 
-        self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                          'Resistance', r, data_file=None)
+        self.add_object(child_class_id, name, category)
 
-        self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                          'Reactance', x, data_file=None)
+        self.add_property(collection_id, name, int(SystemLinesEnum.Resistance),
+                          r, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                          'Susceptance', b, data_file=None)
+        self.add_property(collection_id, name, int(SystemLinesEnum.Reactance),
+                          x, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                          'Max Flow', max_flow, data_file=None)
+        self.add_property(collection_id, name, int(SystemLinesEnum.Susceptance),
+                          b, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                          'Min Flow', min_flow, data_file=None)
+        self.add_property(collection_id, name, int(SystemLinesEnum.Units),
+                          units, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemLinesEnum.MaxFlow),
+                          max_flow, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemLinesEnum.MinFlow),
+                          min_flow, data_file=None)
 
         if overload_max_rating is not None:
-            self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                              'Overload Max Rating', overload_max_rating, data_file=None)
+            self.add_property(collection_id, name, int(SystemLinesEnum.OverloadMaxRating),
+                              overload_max_rating, data_file=None)
 
         if overload_min_rating is not None:
-            self.add_property_by_name(ClassEnum.Line, CollectionEnum.SystemLines, name,
-                              'Overload Min Rating', overload_min_rating, data_file=None)
+            self.add_property(collection_id, name, int(SystemLinesEnum.OverloadMinRating),
+                              overload_min_rating, data_file=None)
 
         self.db.AddMembership(CollectionEnum.LineNodeFrom, name, node_from)
         self.db.AddMembership(CollectionEnum.LineNodeTo, name, node_to)
 
-    def add_transformer(self, node_from, node_to, name, rate, r, x, b, category=''):
+    def add_transformer(self, node_from, node_to, name, rate, r, x, b, units=1,
+                        category='', rate_file=None):
         """
         Add transformer to the Database
         :param node_from: name of the node from
@@ -573,22 +606,30 @@ class PlexosDatabase:
         :param r: Resistence (p.u.)
         :param x: Reactance (p.u.)
         :param b: Susceptance (p.u.)
+        :param units: Number of parallel units, if zero means disconnected
         :param category: Category of the transformer
+        :param rate_file: File of ratings
         :return:
         """
-        self.add_object(ClassEnum.Transformer, name, category)
+        child_class_id = ClassEnum.Transformer
+        collection_id = CollectionEnum.SystemTransformers
 
-        self.add_property_by_name(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
-                          'Resistance', r, data_file=None)
+        self.add_object(child_class_id, name, category)
 
-        self.add_property_by_name(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
-                          'Reactance', x, data_file=None)
+        self.add_property(collection_id, name, int(SystemTransformersEnum.Resistance),
+                          r, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
-                          'Susceptance', b, data_file=None)
+        self.add_property(collection_id, name, int(SystemTransformersEnum.Reactance),
+                          x, data_file=None)
 
-        self.add_property_by_name(ClassEnum.Transformer, CollectionEnum.SystemTransformers, name,
-                          'Rating', rate, data_file=None)
+        self.add_property(collection_id, name, int(SystemTransformersEnum.Susceptance),
+                          b, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemTransformersEnum.Units),
+                          units, data_file=None)
+
+        self.add_property(collection_id, name, int(SystemTransformersEnum.Rating),
+                          rate, data_file=rate_file)
 
         self.db.AddMembership(CollectionEnum.TransformerNodeFrom, name, node_from)
         self.db.AddMembership(CollectionEnum.TransformerNodeTo, name, node_to)

@@ -7,6 +7,44 @@ Created on Sat Sep 09 19:19:57 2017
 @author: Steven
 """
 
+
+"""
+Explanation:
+
+1) Adding non-activated Objects:
+
+I have used  AddObject()
+
+     # Add Two Batteries 
+    db.AddObject('Battery1', ClassEnum.Battery, True, None, 'Testing the API')
+    db.AddObject('Battery2', ClassEnum.Battery, True, None, 'Testing the API')
+
+If you wish to add a "Category" under the classes, you can use "AddCategory()" function. as below:
+  
+    db.AddCategory(ClassEnum.Battery, 'API')
+
+2) Editing Property
+
+Using AddProperty() & RemoveProperty() 
+This is used to "Modify" a property of the object 
+ 
+    db.AddProperty(batt1_mem_id, int(SystemBatteriesEnum.MaxLoad), 100, 0.0, None, None, 
+                                        None, None, None, None, 0, PeriodEnum.Interval)
+    
+    # Modify the property
+    # Step-1: Remove the respective property using membership ID
+    # Step-2 : add the respective property using Membership ID
+    
+    db.RemoveProperty(batt1_mem_id, int(SystemBatteriesEnum.MaxLoad), 0.0, None, None, None, None, 
+                                        None, None, 0, PeriodEnum.Interval)
+    
+    db.AddProperty(batt1_mem_id, int(SystemBatteriesEnum.MaxLoad), 200, 0.0, None, None, None, 
+                                     None, None, None, 0, PeriodEnum.Interval)
+    
+
+"""
+
+
 import os, sys, clr
 
 # load PLEXOS assemblies
