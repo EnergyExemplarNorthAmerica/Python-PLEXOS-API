@@ -1,0 +1,236 @@
+Void Connection(
+	String strFile
+	)
+
+Void Close(
+	)
+
+Int32 CollectionName2Id(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName
+	)
+
+String ObjectId2Name(
+	Int32 ObjectId
+	)
+
+Int32 ObjectName2Id(
+	ClassEnum ClassId,
+	String Name
+	)
+
+String[] GetObjects(
+	ClassEnum nClassId
+	)
+
+String[] GetObjectsInCategory(
+	ClassEnum nClassId,
+	String strCategory
+	)
+
+String[] GetCategories(
+	ClassEnum nClassId
+	)
+
+String[] GetReportedProperties(
+	)
+
+Boolean CategoryExists(
+	ClassEnum nClassId,
+	String strCategory
+	)
+
+String[] GetMemberships(
+	CollectionEnum nCollectionId
+	)
+
+String[] GetChildMembers(
+	CollectionEnum nCollectionId,
+	String strParent
+	)
+
+String[] GetParentMembers(
+	CollectionEnum nCollectionId,
+	String strChild
+	)
+
+Int32 PropertyName2EnumId(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName,
+	String strPropertyName
+	)
+
+Int32 PropertyName2Id(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName,
+	String strPropertyName
+	)
+
+Void PropertyDetails(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName,
+	String[]& strPropertyName,
+	Int32[]& nEnumId
+	)
+
+Recordset GetTimeSlices(
+	)
+
+DataTable GetTimeSlicesToDataTable(
+	)
+
+Int32 TimeSliceName2Id(
+	String strTimeSliceName
+	)
+
+Recordset GetSamples(
+	)
+
+DataTable GetSamplesToDataTable(
+	)
+
+Int32 SampleName2Id(
+	String strSampleName
+	)
+
+String[] GetModels(
+	)
+
+Void SetSelectedColumns(
+	String[]& columns
+	)
+
+String[] GetSelectedColumns(
+	)
+
+Void CleanSelectedColumns(
+	)
+
+Recordset Query(
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Filter[ = None]
+	)
+
+SolutionResultList QueryToList(
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Filter[ = None]
+	)
+
+Boolean QueryToCSV(
+	String strCSVFile,
+	Boolean bAppendToFile,
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Separator[ = ,]
+	)
+
+String get_SystemName(
+	)
+
+Recordset GetData(
+	String TableName,
+	String[]& strFields
+	)
+
+DataTable GetDataTable(
+	String TableName,
+	String& strFields
+	)
+
+Void UpdatePSSERawFromSolution(
+	String strPSSERawFile,
+	String strOutputFile,
+	Object oDateTime
+	)
+
+Int32 AddReportingProperty(
+	CollectionEnum nCollectionId,
+	String strPropertyName,
+	String strUnit,
+	String strSummaryName[ = None],
+	String strSummaryUnit[ = None]
+	)
+
+Void AddReportingUnit(
+	String strUnit
+	)
+
+Void AddReportingData(
+	Double[] ResultData,
+	PeriodEnum PeriodType,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	String ModelName,
+	Int32 PropertyId,
+	Int32 BandId,
+	String SampleName,
+	String TimeSliceName,
+	SimulationPhaseEnum SimulationPhaseId
+	)
+
+Void Commit(
+	)
+
+Boolean get_DisplayAlerts(
+	)
+
+Void set_DisplayAlerts(
+	Boolean AutoPropertyValue
+	)
+
+Boolean Equals(
+	Object obj
+	)
+
+Int32 GetHashCode(
+	)
+
+Type GetType(
+	)
+
+String ToString(
+	)
+
