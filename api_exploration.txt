@@ -1,0 +1,441 @@
+Void Connection(
+	String strFile
+	)
+
+Int32 GetModelsToExecute(
+	String strInputFilename,
+	List`1 strModelList,
+	List`1 strProjectList
+	)
+
+Void Close(
+	)
+
+Boolean NewEmptyDatabase(
+	String filePath,
+	Boolean overwrite[ = False]
+	)
+
+String get_InstallPath(
+	)
+
+String get_PLEXOSVersion(
+	)
+
+String get_PLEXOSBuildDate(
+	)
+
+Recordset GetData(
+	String TableName,
+	String[]& strFields
+	)
+
+Boolean AddCustomColumn(
+	ClassEnum nClassId,
+	String nColumnName,
+	String nObjectName[ = ],
+	Object nData[ = None]
+	)
+
+Boolean AppendCustomColumnData(
+	ClassEnum nClassId,
+	String nColumnName,
+	String nObjectName,
+	Object nData
+	)
+
+Boolean RemoveCustomColumn(
+	ClassEnum nClassId,
+	String nColumnName
+	)
+
+String ObjectId2Name(
+	Int32 ObjectId
+	)
+
+Int32 ObjectName2Id(
+	ClassEnum ClassId,
+	String Name
+	)
+
+String[] GetObjects(
+	ClassEnum nClassId
+	)
+
+MasterDataSet GetInputDataSet(
+	)
+
+Int32 AddObject(
+	String strName,
+	ClassEnum nClassId,
+	Boolean bAddSystemMembership,
+	String strCategory[ = None],
+	String strDescription[ = None]
+	)
+
+Int32 RemoveObject(
+	String strName,
+	ClassEnum nClassId
+	)
+
+Int32 RenameObject(
+	String strOldName,
+	String strNewName,
+	ClassEnum nClassId
+	)
+
+Int32 UpdateObjectDescription(
+	ClassEnum nClassId,
+	String strObjectName,
+	String strNewDescription
+	)
+
+String[] GetObjectsInCategory(
+	ClassEnum nClassId,
+	String strCategory
+	)
+
+Int32 AddCategory(
+	ClassEnum nClassId,
+	String strCategory
+	)
+
+Int32 RemoveCategory(
+	ClassEnum nClassId,
+	String strCategory,
+	Boolean bRemoveObjects[ = True]
+	)
+
+String[] GetCategories(
+	ClassEnum nClassId
+	)
+
+Boolean CategoryExists(
+	ClassEnum nClassId,
+	String strCategory
+	)
+
+Boolean CategorizeObject(
+	ClassEnum nClassId,
+	String strObject,
+	String strCategory
+	)
+
+Int32 CopyObject(
+	String strName,
+	String strNewName,
+	ClassEnum nClassId
+	)
+
+String[] GetMemberships(
+	CollectionEnum nCollectionId
+	)
+
+Int32 AddMembership(
+	CollectionEnum nCollectionId,
+	String strParent,
+	String strChild
+	)
+
+Int32 RemoveMembership(
+	CollectionEnum nCollectionId,
+	String strParent,
+	String strChild
+	)
+
+Int32 GetMembershipID(
+	CollectionEnum nCollectionId,
+	String strParent,
+	String strChild
+	)
+
+String[] GetChildMembers(
+	CollectionEnum nCollectionId,
+	String strParent
+	)
+
+String[] GetParentMembers(
+	CollectionEnum nCollectionId,
+	String strChild
+	)
+
+Int32 AddAttribute(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum,
+	Double dValue
+	)
+
+Int32 RemoveAttribute(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum
+	)
+
+Boolean UpdateAttribute(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum,
+	Double dNewValue
+	)
+
+Boolean SetAttributeValue(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum,
+	Double dValue
+	)
+
+Boolean GetAttributeValue(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum,
+	Double& dValue
+	)
+
+Double GetAttributeValueEx(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum
+	)
+
+Int32 AddProperty(
+	Int32 MembershipId,
+	Int32 EnumId,
+	Int32 BandId,
+	Double Value,
+	Object DateFrom,
+	Object DateTo,
+	Object Variable,
+	Object DataFile,
+	Object Pattern,
+	Object Scenario,
+	Object Action,
+	PeriodEnum PeriodTypeId
+	)
+
+Void SetObjectMetaData(
+	ClassEnum nClassId,
+	String strObjectName,
+	String strMetaClassName,
+	String strMetaDataName,
+	String strValue
+	)
+
+Int32 RemoveProperty(
+	Int32 MembershipId,
+	Int32 EnumId,
+	Int32 BandId,
+	Object DateFrom,
+	Object DateTo,
+	Object Variable,
+	Object DataFile,
+	Object Pattern,
+	Object Scenario,
+	Object Action,
+	PeriodEnum PeriodTypeId
+	)
+
+Boolean GetPropertyValue(
+	Int32 MembershipId,
+	Int32 EnumId,
+	Int32 BandId,
+	Double& Value,
+	Object DateFrom,
+	Object DateTo,
+	Object Variable,
+	Object DataFile,
+	Object Pattern,
+	Object Scenario,
+	Object Action,
+	PeriodEnum PeriodTypeId
+	)
+
+Double GetPropertyValueEx(
+	Int32 MembershipId,
+	Int32 EnumId,
+	Int32 BandId,
+	Object DateFrom,
+	Object DateTo,
+	Object Variable,
+	Object DataFile,
+	Object Pattern,
+	Object Scenario,
+	Object Action,
+	PeriodEnum PeriodTypeId
+	)
+
+List`1 GetMembershipProperties(
+	Int32 MembershipID
+	)
+
+Int32 PropertyName2EnumId(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName,
+	String strPropertyName
+	)
+
+Void AddReportProperty(
+	String strReportName,
+	Int32 nReportPropertyId,
+	SimulationPhaseEnum nPhaseId,
+	Boolean ReportPeriod,
+	Boolean ReportSummary,
+	Boolean ReportStatistics,
+	Boolean ReportSamples
+	)
+
+Int32 ReportPropertyName2EnumId(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName,
+	String strPropertyName
+	)
+
+Int32 ReportPropertyName2PropertyId(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName,
+	String strPropertyName
+	)
+
+String[] GetEnabledProperties(
+	)
+
+Recordset GetPropertiesTable(
+	CollectionEnum CollectionId,
+	String ParentNameList[ = None],
+	String ChildNameList[ = None],
+	String TimesliceList[ = None],
+	String ScenarioList[ = None],
+	String CategoryList[ = None]
+	)
+
+Boolean SetBaseUnitType(
+	UnitsofDataEnum nUnitType,
+	HydroModelEnum nHydroType[ = 1]
+	)
+
+UnitsofDataEnum GetBaseUnitType(
+	)
+
+HydroModelEnum GetHydroModelUnitType(
+	)
+
+Boolean GetPropertyDynamic(
+	CollectionEnum nCollectionId,
+	Int32 nPropertyEnum,
+	PeriodEnum nPeriodType[ = 0]
+	)
+
+Boolean SetPropertyDynamic(
+	CollectionEnum nCollectionId,
+	Int32 nPropertyEnum,
+	Boolean bDynamic,
+	PeriodEnum nPeriodType[ = 0]
+	)
+
+Boolean GetAllPropertiesDynamic(
+	)
+
+Boolean SetAllPropertiesDynamic(
+	Boolean bEnabled
+	)
+
+Boolean AddAssembly(
+	String strFilePath,
+	String strNamespace
+	)
+
+Boolean RemoveAssembly(
+	String strFilePath,
+	String strNamespace
+	)
+
+String[] GetAssemblies(
+	)
+
+Boolean SetAssemblyEnabled(
+	String strFilePath,
+	String strNamespace,
+	Boolean bEnabled
+	)
+
+List`1 GetMessages(
+	Int32 MessageNumber[ = 0]
+	)
+
+Void SetMessageAction(
+	Int32 MessageNumber,
+	MessageActionEnum action
+	)
+
+List`1 GetCustomMessages(
+	Int32 MessageNumber[ = 0]
+	)
+
+Void CreateCustomMessage(
+	Int32 MessageNumber,
+	MessageActionEnum Action,
+	String LhsCollectionName,
+	String LhsParentClassName,
+	String LhsParentObjectName,
+	String LhsChildObjectName,
+	String LhsPropertyName,
+	String LhsPeriod,
+	String Sense,
+	String RhsCollectionName,
+	String RhsParentClassName,
+	String RhsParentObjectName,
+	String RhsChildObjectName,
+	String RhsPropertyName,
+	String RhsPeriod,
+	String Message
+	)
+
+Void CreateCustomMessage(
+	Int32 MessageNumber,
+	MessageActionEnum Action,
+	String LhsCollectionName,
+	String LhsParentClassName,
+	String LhsParentObjectName,
+	String LhsChildObjectName,
+	String LhsPropertyName,
+	String LhsPeriod,
+	String Sense,
+	Double RhsValue,
+	String Message
+	)
+
+Void RemoveCustomMessage(
+	Int32 MessageNumber
+	)
+
+IErrorHandler get_ErrorHandler(
+	)
+
+Void set_ErrorHandler(
+	IErrorHandler value
+	)
+
+Boolean get_DisplayAlerts(
+	)
+
+Void set_DisplayAlerts(
+	Boolean value
+	)
+
+Boolean Equals(
+	Object obj
+	)
+
+Int32 GetHashCode(
+	)
+
+Type GetType(
+	)
+
+String ToString(
+	)
+

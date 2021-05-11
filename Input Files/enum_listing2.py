@@ -8,7 +8,7 @@ Created on Mon Sep 11 12:54:57 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
 clr.AddReference('EEUTILITY')
 
 # .NET related imports

@@ -19,6 +19,12 @@ Boolean NewEmptyDatabase(
 String get_InstallPath(
 	)
 
+String get_PLEXOSVersion(
+	)
+
+String get_PLEXOSBuildDate(
+	)
+
 Recordset GetData(
 	String TableName,
 	String[]& strFields
@@ -187,6 +193,12 @@ Boolean GetAttributeValue(
 	Double& dValue
 	)
 
+Double GetAttributeValueEx(
+	ClassEnum nClassId,
+	String strObjectName,
+	Int32 nAttributeEnum
+	)
+
 Int32 AddProperty(
 	Int32 MembershipId,
 	Int32 EnumId,
@@ -200,6 +212,14 @@ Int32 AddProperty(
 	Object Scenario,
 	Object Action,
 	PeriodEnum PeriodTypeId
+	)
+
+Void SetObjectMetaData(
+	ClassEnum nClassId,
+	String strObjectName,
+	String strMetaClassName,
+	String strMetaDataName,
+	String strValue
 	)
 
 Int32 RemoveProperty(
@@ -229,6 +249,24 @@ Boolean GetPropertyValue(
 	Object Scenario,
 	Object Action,
 	PeriodEnum PeriodTypeId
+	)
+
+Double GetPropertyValueEx(
+	Int32 MembershipId,
+	Int32 EnumId,
+	Int32 BandId,
+	Object DateFrom,
+	Object DateTo,
+	Object Variable,
+	Object DataFile,
+	Object Pattern,
+	Object Scenario,
+	Object Action,
+	PeriodEnum PeriodTypeId
+	)
+
+List`1 GetMembershipProperties(
+	Int32 MembershipID
 	)
 
 Int32 PropertyName2EnumId(
@@ -324,11 +362,68 @@ Boolean SetAssemblyEnabled(
 	Boolean bEnabled
 	)
 
+List`1 GetMessages(
+	Int32 MessageNumber[ = 0]
+	)
+
+Void SetMessageAction(
+	Int32 MessageNumber,
+	MessageActionEnum action
+	)
+
+List`1 GetCustomMessages(
+	Int32 MessageNumber[ = 0]
+	)
+
+Void CreateCustomMessage(
+	Int32 MessageNumber,
+	MessageActionEnum Action,
+	String LhsCollectionName,
+	String LhsParentClassName,
+	String LhsParentObjectName,
+	String LhsChildObjectName,
+	String LhsPropertyName,
+	String LhsPeriod,
+	String Sense,
+	String RhsCollectionName,
+	String RhsParentClassName,
+	String RhsParentObjectName,
+	String RhsChildObjectName,
+	String RhsPropertyName,
+	String RhsPeriod,
+	String Message
+	)
+
+Void CreateCustomMessage(
+	Int32 MessageNumber,
+	MessageActionEnum Action,
+	String LhsCollectionName,
+	String LhsParentClassName,
+	String LhsParentObjectName,
+	String LhsChildObjectName,
+	String LhsPropertyName,
+	String LhsPeriod,
+	String Sense,
+	Double RhsValue,
+	String Message
+	)
+
+Void RemoveCustomMessage(
+	Int32 MessageNumber
+	)
+
+IErrorHandler get_ErrorHandler(
+	)
+
+Void set_ErrorHandler(
+	IErrorHandler value
+	)
+
 Boolean get_DisplayAlerts(
 	)
 
 Void set_DisplayAlerts(
-	Boolean AutoPropertyValue
+	Boolean value
 	)
 
 Boolean Equals(
