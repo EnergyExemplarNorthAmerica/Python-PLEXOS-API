@@ -11,12 +11,14 @@ Created on Mon Jun 05 11:36:46 2017
 import getpass, os, sys, clr
 from os.path import dirname, join
 
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
-from PLEXOS7_NET.Core import PLEXOSConnect
+from PLEXOS_NET.Core import PLEXOSConnect
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System.IO import SearchOption
 
 server =   input('Server:          ')

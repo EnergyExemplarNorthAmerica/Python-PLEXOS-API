@@ -10,13 +10,15 @@ Created on Sat Sep 09 19:19:57 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import DatabaseCore
+from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 # Create an object to store the input data
 db = DatabaseCore()

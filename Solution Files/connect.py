@@ -11,13 +11,15 @@ Created on Fri Sep 08 15:03:46 2017
 import os, clr, sys
 
 # Python .NET interface
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # Import from .NET assemblies (both PLEXOS and system)
-from PLEXOS7_NET.Core import *
+from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()

@@ -10,12 +10,13 @@ Created on Sat Sep 09 20:11:21 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API/')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import DatabaseCore
+from PLEXOS_NET.Core import DatabaseCore
 
 def list_method(method):
     text = '{} {}('.format(method.ReturnType.Name, method.Name)
@@ -31,7 +32,7 @@ def list_method(method):
     text += '\n\t)\n\n'
     return text
               
-with open('api_exploration.txt', 'w') as fout:
+with open('DatabaseCoreMethods.txt', 'w') as fout:
     for method in clr.GetClrType(DatabaseCore).GetMethods():
         fout.write(list_method(method))
 

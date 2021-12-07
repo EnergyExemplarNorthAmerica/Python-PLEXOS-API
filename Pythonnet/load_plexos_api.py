@@ -16,13 +16,14 @@ seen the following.
 from dotnet.seamless import add_assemblies, load_assembly#, build_assembly
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 7.4/'
+plexos_path = 'C:/Program Files/Energy Exemplar/PLEXOS 9.0 API'
 add_assemblies(plexos_path)
-load_assembly('PLEXOS7_NET.Core')
+load_assembly('PLEXOS_NET.Core')
 load_assembly('EEUTILITY')
 
 # .NET related imports
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 '''
 
 '''
@@ -42,15 +43,17 @@ Most other things are similar
 import sys, clr
 
 # instead of add_assemblies(...) do this
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
 
 # instead of load_assemblies(...) do this
-clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # you can import .NET modules just like you used to...
-from PLEXOS7_NET.Core import DatabaseCore, PLEXOSConnect, Solution
+from PLEXOS_NET.Core import DatabaseCore, PLEXOSConnect, Solution
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 '''
 API code as usual

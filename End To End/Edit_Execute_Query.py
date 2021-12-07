@@ -6,14 +6,16 @@ from datetime import datetime
 
 from shutil import copyfile
 
-plexospath = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/'
+plexospath = 'C:/Program Files/Energy Exemplar/PLEXOS 9.0 API'
 sys.path.append(plexospath)
-clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import DatabaseCore, Solution, PLEXOSConnect
+from PLEXOS_NET.Core import DatabaseCore, Solution, PLEXOSConnect
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 def update_dataset(original_ds, new_ds):
     if os.path.exists(original_ds):

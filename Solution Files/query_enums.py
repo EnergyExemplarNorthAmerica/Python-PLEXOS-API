@@ -7,11 +7,12 @@ Created on Fri Sep 08 16:03:57 2017
 
 import os, sys, clr
 
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
 clr.AddReference('EEUTILITY')
 
 from EEUTILITY import Enums
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System import Enum, Type
 
 def list_enum_names(enum):

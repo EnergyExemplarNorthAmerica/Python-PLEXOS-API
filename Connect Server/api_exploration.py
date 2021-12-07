@@ -5,17 +5,20 @@ Explore the DatabaseCore class
 Created on Sat Sep 09 20:11:21 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import PLEXOSConnect
+from PLEXOS_NET.Core import PLEXOSConnect
 
 def list_method(method):
     text = '{} {}('.format(method.ReturnType.Name, method.Name)

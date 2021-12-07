@@ -20,12 +20,14 @@ nicer, but it isn't difficult in PythonNet.
 
 # First load the PLEXOS API
 import sys, clr
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
-from PLEXOS7_NET.Core import DatabaseCore, Solution, PLEXOSConnect
+from PLEXOS_NET.Core import DatabaseCore, Solution, PLEXOSConnect
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 # Example of getting method list
 # the main item here is where clr.GetClrType is used

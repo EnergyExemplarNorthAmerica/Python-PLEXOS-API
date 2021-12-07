@@ -8,12 +8,14 @@ Created on Sat Sep 09 20:33:10 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 # a function to format the presentation of enumerations
 def list_enum_names(t):

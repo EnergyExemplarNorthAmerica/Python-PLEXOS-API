@@ -8,11 +8,12 @@ Created on Mon Sep 11 12:54:57 2017
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
 clr.AddReference('EEUTILITY')
 
 # .NET related imports
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System import Enum
 
 with open('EEUTILITY_Enums.txt', 'w') as fout:

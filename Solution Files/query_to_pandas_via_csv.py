@@ -15,13 +15,15 @@ from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # Import from .NET assemblies (both PLEXOS and system)
-from PLEXOS7_NET.Core import *
+from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()

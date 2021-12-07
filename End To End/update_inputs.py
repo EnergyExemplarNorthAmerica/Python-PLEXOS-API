@@ -18,13 +18,15 @@ import os, sys, clr
 from datetime import datetime
 from shutil import copyfile
 
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import DatabaseCore
+from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System import Object, String, Int32, Double
 
 def create_datafile_object(plexosfile, datafilename, datafilepath, copyfileto=''):

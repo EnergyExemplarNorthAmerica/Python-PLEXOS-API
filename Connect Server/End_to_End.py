@@ -14,17 +14,19 @@ from datetime import datetime
 from time import sleep
 from os.path import dirname, join
 import csv
-from pandas.io.common import EmptyDataError
+#from pandas.io.common import EmptyDataError
 from shutil import copyfile
 
 # .NET related imports
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import *
+from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System.IO import SearchOption
 
 server =   input('Server:          ')

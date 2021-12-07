@@ -5,19 +5,23 @@ Launch a PLEXOS Connect run
 Created on Mon Jun 05 11:36:46 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 # standard Python/SciPy libraries
 import getpass, sys, os, clr
 
 # .NET related imports
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
-from PLEXOS7_NET.Core import PLEXOSConnect
+from PLEXOS_NET.Core import PLEXOSConnect
 from EEUTILITY.Enums import *
-import PLEXOS7_NET.Core as plx
+from EnergyExemplar.PLEXOS.Utility import *
+import PLEXOS_NET.Core as plx
 from System.IO import SearchOption
 
 server =   input('Server:          ')

@@ -3,19 +3,23 @@
 Created on Mon Jun 05 11:36:46 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 # standard Python/SciPy libraries
 import getpass, os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-import PLEXOS7_NET.Core as plx
+import PLEXOS_NET.Core as plx
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System import *
 
 server =   input('Server:          ')

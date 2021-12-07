@@ -9,15 +9,17 @@ import os, sys, clr, datetime as dt
 from shutil import copyfile
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/'
+plexos_path = 'C:/Program Files/Energy Exemplar/PLEXOS 9.0 API'
 
 sys.path.append(plexos_path)
-clr.AddReference('PLEXOS7_NET.Core')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
-from PLEXOS7_NET.Core import DatabaseCore
+from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 from System import DateTime, String, Int32, Double
 
 def modify_model_horizon(datafile, modelname, start):

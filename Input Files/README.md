@@ -5,7 +5,7 @@ is possible to retrieve data or insert data into the dataset.
 
 # 1. api_exploration.py
 
-Review the methods available in the DatabaseCore class from PLEXOS7_NET.Core.
+Review the methods available in the DatabaseCore class from PLEXOS_NET.Core.
 DatabaseCoreMethods.txt contains the PLEXOS 8.1R02 version of this output.
 
 # 2. enum_listing2.py

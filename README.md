@@ -31,8 +31,13 @@ https://energyexemplar.com/contactus/
 
 # Development Environment
 The authors are primarily using Anaconda Python version 3.6.x along with the PythonNet
-repository, along with PLEXOS Desktop 8.1R02. The authors also use Visual Studio Code
-with the Python and GitExtensions VSCode extensions.
+repository, along with PLEXOS Desktop 9.0R03. 
+
+*PLEXOS 9 API requires an additional set of software components to interoperate with Python.
+In the Energy Exemplar download portal, this is called "API 9.000 R03". This library is 
+PLEXOS version
+
+The authors also use Visual Studio Code with the Python and GitExtensions VSCode extensions.
 
 Also .NET Framework 4.7.2 or higher is needed. However, you would have to install 
 this to use PLEXOS.

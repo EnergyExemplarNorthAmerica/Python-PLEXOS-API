@@ -8,13 +8,15 @@ Created on Sat Sep 09 09:41:33 2017
 # Python .NET interface
 import clr, sys
 
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
-clr.AddReference('PLEXOS7_NET.Core')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # Import from .NET assemblies (both PLEXOS and system)
-from PLEXOS7_NET.Core import *
+from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility import *
 
 def list_method(method):
     text = '{} {}('.format(method.ReturnType.Name, method.Name)
