@@ -35,7 +35,7 @@ repository, along with PLEXOS Desktop 9.0R03.
 
 *PLEXOS 9 API requires an additional set of software components to interoperate with Python.
 In the Energy Exemplar download portal, this is called "API 9.000 R03". This library is 
-PLEXOS version
+PLEXOS version specific.*
 
 The authors also use Visual Studio Code with the Python and GitExtensions VSCode extensions.
 
