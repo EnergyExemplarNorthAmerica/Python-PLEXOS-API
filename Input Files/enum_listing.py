@@ -15,7 +15,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 # .NET related imports
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # a function to format the presentation of enumerations
 def list_enum_names(t):

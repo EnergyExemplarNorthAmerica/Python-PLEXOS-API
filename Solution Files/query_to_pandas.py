@@ -23,7 +23,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # Import from .NET assemblies (both PLEXOS and system)
 from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()

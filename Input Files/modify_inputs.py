@@ -5,6 +5,8 @@ Update PLEXOS attributes in an input dataset
 Created on Sat Sep 09 19:19:57 2017
 
 @author: Steven
+
+TODO: P9 Failed
 """
 
 import os, sys, clr
@@ -19,8 +21,10 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # .NET related imports
 from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import *
+
+if os.path.exists('Input Files'): os.chdir('Input Files')
 
 if os.path.exists('rts_PLEXOS.xml'):
 

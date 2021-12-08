@@ -12,7 +12,7 @@ clr.AddReference('EEUTILITY')
 
 from EEUTILITY import Enums
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import Enum, Type
 
 def list_enum_names(enum):

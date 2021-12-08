@@ -18,7 +18,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 from PLEXOS_NET.Core import PLEXOSConnect
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System.IO import SearchOption
 
 server =   input('Server:          ')

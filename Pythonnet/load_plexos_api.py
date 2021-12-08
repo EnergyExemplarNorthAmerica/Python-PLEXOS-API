@@ -23,7 +23,7 @@ load_assembly('EEUTILITY')
 
 # .NET related imports
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 '''
 
 '''
@@ -53,7 +53,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # you can import .NET modules just like you used to...
 from PLEXOS_NET.Core import DatabaseCore, PLEXOSConnect, Solution
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 '''
 API code as usual

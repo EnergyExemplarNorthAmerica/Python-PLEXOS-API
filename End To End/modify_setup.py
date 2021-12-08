@@ -19,7 +19,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # .NET related imports
 from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import DateTime, String, Int32, Double
 
 def modify_model_horizon(datafile, modelname, start):

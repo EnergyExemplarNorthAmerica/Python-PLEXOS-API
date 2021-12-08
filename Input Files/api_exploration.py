@@ -5,6 +5,8 @@ Explore the DatabaseCore class
 Created on Sat Sep 09 20:11:21 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 import os, sys, clr

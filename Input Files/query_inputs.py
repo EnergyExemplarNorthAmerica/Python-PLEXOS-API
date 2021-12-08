@@ -5,6 +5,8 @@ Retrieve data from the PLEXOS input dataset
 Created on Sat Sep 09 19:19:57 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 import os, sys, clr
@@ -18,7 +20,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # .NET related imports
 from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # Create an object to store the input data
 db = DatabaseCore()
@@ -27,6 +29,9 @@ Void Connection(
 	String strFile
 	)
 '''
+
+if os.path.exists('Input Files'): os.chdir('Input Files')
+
 db.Connection('rts_PLEXOS.xml')
 
 output_file = open('rts_PLEXOS.txt','w')

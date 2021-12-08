@@ -27,7 +27,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 from PLEXOS_NET.Core import DatabaseCore, Solution, PLEXOSConnect
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # Example of getting method list
 # the main item here is where clr.GetClrType is used

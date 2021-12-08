@@ -26,7 +26,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # .NET related imports
 from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import Object, String, Int32, Double
 
 def create_datafile_object(plexosfile, datafilename, datafilepath, copyfileto=''):

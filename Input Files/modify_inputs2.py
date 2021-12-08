@@ -5,6 +5,8 @@ Create scenarios and add data overlays to a PLEXOS input dataset
 Created on Sat Sep 09 19:19:57 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 import os, sys, clr
@@ -22,8 +24,10 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # .NET related imports
 from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import DateTime
+
+if os.path.exists('Input Files'): os.chdir('Input Files')
 
 if os.path.exists('rts_PLEXOS.xml'):
 

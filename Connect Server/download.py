@@ -20,7 +20,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 
 from PLEXOS_NET.Core import PLEXOSConnect
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 import PLEXOS_NET.Core as plx
 from System.IO import SearchOption
 

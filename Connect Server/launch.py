@@ -5,6 +5,8 @@ Launch a PLEXOS Connect run
 Created on Mon Jun 05 11:36:46 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 # standard Python/SciPy libraries
@@ -23,7 +25,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 # .NET related imports
 import PLEXOS_NET.Core as plx
 from EEUTILITY.Enums import *
-from EnergyExemplar.PLEXOS.Utility import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import *
 
 server =   input('Server:          ')
@@ -57,7 +59,9 @@ if cxn.CheckDatasetExists(folder,dataset):
         print(v)
         
     version = input('Which version? (Enter for latest)')
-    
+    if version == '':
+        version = cxn.GetDatasetLatestVersion(folder,dataset)
+
     print
     print('Select the .xml database')
     files = cxn.GetDatasetFiles(folder,dataset,version)
