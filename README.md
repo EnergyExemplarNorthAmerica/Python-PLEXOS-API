@@ -48,4 +48,4 @@ Python for .NET --> https://pythonnet.github.io/
 
 Visual Studio Code --> https://code.visualstudio.com/
 
-Energy Exemplar and PLEXOS --> https://www.energyexemplar.com/
+Energy Exemplar and PLEXOS --> https://portal.energyexemplar.com/
