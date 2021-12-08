@@ -30,7 +30,7 @@ licensees.
 
 For assistance with PLEXOS licensing, please visit
 
-https://energyexemplar.com/contactus/
+https://www.energyexemplar.com/contact-us
 
 # Development Environment
 The authors are primarily using Anaconda Python version 3.6.x along with the PythonNet
