@@ -1,7 +1,10 @@
 # Python PLEXOS API
 https://github.com/EnergyExemplarNorthAmerica/Python-PLEXOS-API
 
-A repository of simple Python examples for use with the PLEXOS API
+A repository of simple Python examples for use with the PLEXOS API. **This branch for 
+PLEXOS 9 is still in progress.** Please note that this repository is not a supported
+product of Energy Exemplar, but rather a help to the user which is a free time activity
+for dedicated fans of the product.
 
 # PLEXOS® for Power Systems
 PLEXOS® Integrated Energy Model (PLEXOS) is tried-and-true simulation software that
