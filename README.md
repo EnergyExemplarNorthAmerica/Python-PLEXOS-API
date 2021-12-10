@@ -63,7 +63,7 @@ from EnergyExemplar.PLEXOS.Utility.Enums import *
 Two important points arise from this. First, this notation is not presently attached to 
 every script. The scripts have been modified to reflect the above, but they may not all
 run successfully for a variety of reasons. Second, the implication that it has been tested
-doesn't confer any warrantee of its performance on in any environment or infrastructure 
+doesn't confer any warrantee of its performance on any environment or infrastructure 
 other than that on which it was tested. See below.
 
 # PLEXOS® for Power Systems
