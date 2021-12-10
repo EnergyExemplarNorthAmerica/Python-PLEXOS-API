@@ -7,6 +7,65 @@ A repository of simple Python examples for use with the PLEXOS API.
 is not a supported product of Energy Exemplar, but rather a help to the user which 
 is a free time activity for dedicated fans of the product.
 
+## Some key differences between PLEXOS 9 API and prior versions
+
+### Python's .NET interop components only work with .NET 4. PLEXOS 9 is .NET 5. 
+That means you need to install an additional software component to use the PLEXOS 9 API 
+with Python. It is available on the Energy Exemplar customer portal (you have to scroll 
+nearly to the bottom).
+### The primary components to import have changed a bit.
+Before
+```
+sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+clr.AddReference('PLEXOS7_NET.Core')
+```
+After
+```
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+clr.AddReference('PLEXOS_NET.Core')
+```
+**Note** *the new location to add to the ```PATH``` references the install location of
+the new software components mentioned above, and the missing ```7``` in the name
+of the reference. Also if you are migrating from an older PLEXOS version, ```(x86)```
+is no longer in the default installation folder.*
+### Likewise, a key ```import``` statement has changed.
+Before
+```
+from PLEXOS7_NET.Core import DatabaseCore
+```
+After
+```
+from PLEXOS_NET.Core import DatabaseCore
+```
+Again a missing ```7```.
+
+### There is a new reference that contains some of the enumerations that used to be in EEUTILITY.
+Before
+```
+clr.AddReference('EEUTILITY')
+```
+After
+```
+clr.AddReference('EEUTILITY')
+clr.AddReference('EnergyExemplar.PLEXOS.Utility')
+```
+### There is a corresponding modification to import the enumerations that are in this new component.
+Before
+```
+from EEUTILITY.Enums import *
+```
+After
+```
+from EEUTILITY.Enums import *
+from EnergyExemplar.PLEXOS.Utility.Enums import *
+```
+### Some of the scripts are noted in the header as P9 Tested.
+Two important points arise from this. First, this notation is not presently attached to 
+every script. The scripts have been modified to reflect the above, but they may not all
+run successfully for a variety of reasons. Second, the implication that it has been tested
+doesn't confer any warrantee of its performance on in any environment or infrastructure 
+other than that on which it was tested. See below.
+
 # PLEXOS® for Power Systems
 PLEXOS® Integrated Energy Model (PLEXOS) is tried-and-true simulation software that
 uses state-of-the-art mathematical optimisation combined with the latest data
