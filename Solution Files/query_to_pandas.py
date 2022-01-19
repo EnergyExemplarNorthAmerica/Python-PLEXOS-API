@@ -15,7 +15,7 @@ from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 
@@ -25,7 +25,8 @@ from EEUTILITY.Enums import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
-sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
+sol_folder = os.path.dirname(__file__)
+sol_file = os.path.join(sol_folder, 'Model Q2 Week1 DA Solution.zip') # replace with your solution file
 if not os.path.exists(sol_file):
     print('No such file')
     exit
@@ -62,8 +63,32 @@ if results.EOF:
 
 # Create a DataFrame with a column for each selected column in the results.
 resultsRows = results.GetRows()
-df = pd.DataFrame([[resultsRows[i, j] for i in range(resultsRows.GetLength(0))] for j in range(resultsRows.GetLength(1))],columns = [x.Name for x in results.Fields])
+
+# list out the fields you want to retain with headers in the order you prefer
+my_columns = [
+    ('parent_name', 'Parent'), 
+    ('child_name', 'Name'),
+    ('property_name', 'Property'),
+    ('_date', 'Timestamp'), 
+    ('value', 'Value'), 
+    ('phase_name', 'Phase')
+    ]
+# my_columns = [(x.Name,x.Name) for x in results.Fields] # use this if you just want all fields
+my_columns_idx = {x.Name: idx for (idx, x) in enumerate(results.Fields)} # map the field names to their indices
+
+# construct the pandas data frame from a filtered 2D list
+df = pd.DataFrame(
+    [
+        [
+            resultsRows[i, j] 
+            for i in [my_columns_idx[col] for col, hdr in my_columns] # obtain the field numbers in the correct order
+        ] 
+        for j in range(resultsRows.GetLength(1))
+    ],
+    columns = [hdr for col, hdr in my_columns] # obtain the column headers in the correct order
+    )
     
-wb = pd.ExcelWriter('query.xlsx')
+# write the pandas data to an Excel worksheet
+wb = pd.ExcelWriter(os.path.join(sol_folder, 'query.xlsx'))
 df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
 wb.save()
