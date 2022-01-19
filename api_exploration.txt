@@ -2,51 +2,13 @@ Void Connection(
 	String strFile
 	)
 
-Int32 GetModelsToExecute(
-	String strInputFilename,
-	List`1 strModelList,
-	List`1 strProjectList
-	)
-
 Void Close(
 	)
 
-Boolean NewEmptyDatabase(
-	String filePath,
-	Boolean overwrite[ = False]
-	)
-
-String get_InstallPath(
-	)
-
-String get_PLEXOSVersion(
-	)
-
-String get_PLEXOSBuildDate(
-	)
-
-Recordset GetData(
-	String TableName,
-	String[]& strFields
-	)
-
-Boolean AddCustomColumn(
-	ClassEnum nClassId,
-	String nColumnName,
-	String nObjectName[ = ],
-	Object nData[ = None]
-	)
-
-Boolean AppendCustomColumnData(
-	ClassEnum nClassId,
-	String nColumnName,
-	String nObjectName,
-	Object nData
-	)
-
-Boolean RemoveCustomColumn(
-	ClassEnum nClassId,
-	String nColumnName
+Int32 CollectionName2Id(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName
 	)
 
 String ObjectId2Name(
@@ -62,52 +24,16 @@ String[] GetObjects(
 	ClassEnum nClassId
 	)
 
-MasterDataSet GetInputDataSet(
-	)
-
-Int32 AddObject(
-	String strName,
-	ClassEnum nClassId,
-	Boolean bAddSystemMembership,
-	String strCategory[ = None],
-	String strDescription[ = None]
-	)
-
-Int32 RemoveObject(
-	String strName,
-	ClassEnum nClassId
-	)
-
-Int32 RenameObject(
-	String strOldName,
-	String strNewName,
-	ClassEnum nClassId
-	)
-
-Int32 UpdateObjectDescription(
-	ClassEnum nClassId,
-	String strObjectName,
-	String strNewDescription
-	)
-
 String[] GetObjectsInCategory(
 	ClassEnum nClassId,
 	String strCategory
 	)
 
-Int32 AddCategory(
-	ClassEnum nClassId,
-	String strCategory
-	)
-
-Int32 RemoveCategory(
-	ClassEnum nClassId,
-	String strCategory,
-	Boolean bRemoveObjects[ = True]
-	)
-
 String[] GetCategories(
 	ClassEnum nClassId
+	)
+
+String[] GetReportedProperties(
 	)
 
 Boolean CategoryExists(
@@ -115,38 +41,8 @@ Boolean CategoryExists(
 	String strCategory
 	)
 
-Boolean CategorizeObject(
-	ClassEnum nClassId,
-	String strObject,
-	String strCategory
-	)
-
-Int32 CopyObject(
-	String strName,
-	String strNewName,
-	ClassEnum nClassId
-	)
-
 String[] GetMemberships(
 	CollectionEnum nCollectionId
-	)
-
-Int32 AddMembership(
-	CollectionEnum nCollectionId,
-	String strParent,
-	String strChild
-	)
-
-Int32 RemoveMembership(
-	CollectionEnum nCollectionId,
-	String strParent,
-	String strChild
-	)
-
-Int32 GetMembershipID(
-	CollectionEnum nCollectionId,
-	String strParent,
-	String strChild
 	)
 
 String[] GetChildMembers(
@@ -159,116 +55,6 @@ String[] GetParentMembers(
 	String strChild
 	)
 
-Int32 AddAttribute(
-	ClassEnum nClassId,
-	String strObjectName,
-	Int32 nAttributeEnum,
-	Double dValue
-	)
-
-Int32 RemoveAttribute(
-	ClassEnum nClassId,
-	String strObjectName,
-	Int32 nAttributeEnum
-	)
-
-Boolean UpdateAttribute(
-	ClassEnum nClassId,
-	String strObjectName,
-	Int32 nAttributeEnum,
-	Double dNewValue
-	)
-
-Boolean SetAttributeValue(
-	ClassEnum nClassId,
-	String strObjectName,
-	Int32 nAttributeEnum,
-	Double dValue
-	)
-
-Boolean GetAttributeValue(
-	ClassEnum nClassId,
-	String strObjectName,
-	Int32 nAttributeEnum,
-	Double& dValue
-	)
-
-Double GetAttributeValueEx(
-	ClassEnum nClassId,
-	String strObjectName,
-	Int32 nAttributeEnum
-	)
-
-Int32 AddProperty(
-	Int32 MembershipId,
-	Int32 EnumId,
-	Int32 BandId,
-	Double Value,
-	Object DateFrom,
-	Object DateTo,
-	Object Variable,
-	Object DataFile,
-	Object Pattern,
-	Object Scenario,
-	Object Action,
-	PeriodEnum PeriodTypeId
-	)
-
-Void SetObjectMetaData(
-	ClassEnum nClassId,
-	String strObjectName,
-	String strMetaClassName,
-	String strMetaDataName,
-	String strValue
-	)
-
-Int32 RemoveProperty(
-	Int32 MembershipId,
-	Int32 EnumId,
-	Int32 BandId,
-	Object DateFrom,
-	Object DateTo,
-	Object Variable,
-	Object DataFile,
-	Object Pattern,
-	Object Scenario,
-	Object Action,
-	PeriodEnum PeriodTypeId
-	)
-
-Boolean GetPropertyValue(
-	Int32 MembershipId,
-	Int32 EnumId,
-	Int32 BandId,
-	Double& Value,
-	Object DateFrom,
-	Object DateTo,
-	Object Variable,
-	Object DataFile,
-	Object Pattern,
-	Object Scenario,
-	Object Action,
-	PeriodEnum PeriodTypeId
-	)
-
-Double GetPropertyValueEx(
-	Int32 MembershipId,
-	Int32 EnumId,
-	Int32 BandId,
-	Object DateFrom,
-	Object DateTo,
-	Object Variable,
-	Object DataFile,
-	Object Pattern,
-	Object Scenario,
-	Object Action,
-	PeriodEnum PeriodTypeId
-	)
-
-List`1 GetMembershipProperties(
-	Int32 MembershipID
-	)
-
 Int32 PropertyName2EnumId(
 	String strParentClassName,
 	String strChildClassName,
@@ -276,140 +62,165 @@ Int32 PropertyName2EnumId(
 	String strPropertyName
 	)
 
-Void AddReportProperty(
-	String strReportName,
-	Int32 nReportPropertyId,
-	SimulationPhaseEnum nPhaseId,
-	Boolean ReportPeriod,
-	Boolean ReportSummary,
-	Boolean ReportStatistics,
-	Boolean ReportSamples
-	)
-
-Int32 ReportPropertyName2EnumId(
+Int32 PropertyName2Id(
 	String strParentClassName,
 	String strChildClassName,
 	String strCollectionName,
 	String strPropertyName
 	)
 
-Int32 ReportPropertyName2PropertyId(
+Void PropertyDetails(
 	String strParentClassName,
 	String strChildClassName,
 	String strCollectionName,
-	String strPropertyName
+	String[]& strPropertyName,
+	Int32[]& nEnumId
 	)
 
-String[] GetEnabledProperties(
+Object[] PropertyDetailsEx(
+	String strParentClassName,
+	String strChildClassName,
+	String strCollectionName
 	)
 
-Recordset GetPropertiesTable(
+Recordset GetTimeSlices(
+	)
+
+DataTable GetTimeSlicesToDataTable(
+	)
+
+Int32 TimeSliceName2Id(
+	String strTimeSliceName
+	)
+
+Recordset GetSamples(
+	)
+
+DataTable GetSamplesToDataTable(
+	)
+
+Int32 SampleName2Id(
+	String strSampleName
+	)
+
+String[] GetModels(
+	)
+
+Void SetSelectedColumns(
+	String[] columns
+	)
+
+String[] GetSelectedColumns(
+	)
+
+Void CleanSelectedColumns(
+	)
+
+Recordset Query(
+	SimulationPhaseEnum SimulationPhaseId,
 	CollectionEnum CollectionId,
-	String ParentNameList[ = None],
-	String ChildNameList[ = None],
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
 	String TimesliceList[ = None],
-	String ScenarioList[ = None],
-	String CategoryList[ = None]
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Filter[ = None]
 	)
 
-Boolean SetBaseUnitType(
-	UnitsofDataEnum nUnitType,
-	HydroModelEnum nHydroType[ = 1]
+SolutionResultList QueryToList(
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Filter[ = None]
 	)
 
-UnitsofDataEnum GetBaseUnitType(
+Boolean QueryToCSV(
+	String strCSVFile,
+	Boolean bAppendToFile,
+	SimulationPhaseEnum SimulationPhaseId,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	PeriodEnum PeriodTypeId,
+	SeriesTypeEnum SeriesTypeId,
+	String PropertyList[ = None],
+	Object DateFrom[ = None],
+	Object DateTo[ = None],
+	String TimesliceList[ = None],
+	String SampleList[ = None],
+	String ModelName[ = None],
+	AggregationEnum AggregationType[ = 0],
+	String Category[ = None],
+	String Separator[ = ,]
 	)
 
-HydroModelEnum GetHydroModelUnitType(
+String get_SystemName(
 	)
 
-Boolean GetPropertyDynamic(
+Recordset GetData(
+	String TableName,
+	String[]& strFields
+	)
+
+DataTable GetDataTable(
+	String TableName,
+	String strFields
+	)
+
+Void UpdatePSSERawFromSolution(
+	String strPSSERawFile,
+	String strOutputFile,
+	Object oDateTime,
+	Boolean bLoadData,
+	Boolean bGenData,
+	Boolean bBranchData
+	)
+
+Int32 AddReportingProperty(
 	CollectionEnum nCollectionId,
-	Int32 nPropertyEnum,
-	PeriodEnum nPeriodType[ = 0]
+	String strPropertyName,
+	String strUnit,
+	String strSummaryName[ = None],
+	String strSummaryUnit[ = None]
 	)
 
-Boolean SetPropertyDynamic(
-	CollectionEnum nCollectionId,
-	Int32 nPropertyEnum,
-	Boolean bDynamic,
-	PeriodEnum nPeriodType[ = 0]
+Void AddReportingUnit(
+	String strUnit
 	)
 
-Boolean GetAllPropertiesDynamic(
+Void AddReportingData(
+	Double[] ResultData,
+	PeriodEnum PeriodType,
+	CollectionEnum CollectionId,
+	String ParentName,
+	String ChildName,
+	String ModelName,
+	Int32 PropertyId,
+	Int32 BandId,
+	String SampleName,
+	String TimeSliceName,
+	SimulationPhaseEnum SimulationPhaseId
 	)
 
-Boolean SetAllPropertiesDynamic(
-	Boolean bEnabled
-	)
-
-Boolean AddAssembly(
-	String strFilePath,
-	String strNamespace
-	)
-
-Boolean RemoveAssembly(
-	String strFilePath,
-	String strNamespace
-	)
-
-String[] GetAssemblies(
-	)
-
-Boolean SetAssemblyEnabled(
-	String strFilePath,
-	String strNamespace,
-	Boolean bEnabled
-	)
-
-List`1 GetMessages(
-	Int32 MessageNumber[ = 0]
-	)
-
-Void SetMessageAction(
-	Int32 MessageNumber,
-	MessageActionEnum action
-	)
-
-List`1 GetCustomMessages(
-	Int32 MessageNumber[ = 0]
-	)
-
-Void CreateCustomMessage(
-	Int32 MessageNumber,
-	MessageActionEnum Action,
-	String LhsCollectionName,
-	String LhsParentClassName,
-	String LhsParentObjectName,
-	String LhsChildObjectName,
-	String LhsPropertyName,
-	String LhsPeriod,
-	String Sense,
-	String RhsCollectionName,
-	String RhsParentClassName,
-	String RhsParentObjectName,
-	String RhsChildObjectName,
-	String RhsPropertyName,
-	String RhsPeriod,
-	String Message
-	)
-
-Void CreateCustomMessage(
-	Int32 MessageNumber,
-	MessageActionEnum Action,
-	String LhsCollectionName,
-	String LhsParentClassName,
-	String LhsParentObjectName,
-	String LhsChildObjectName,
-	String LhsPropertyName,
-	String LhsPeriod,
-	String Sense,
-	Double RhsValue,
-	String Message
-	)
-
-Void RemoveCustomMessage(
-	Int32 MessageNumber
+Void Commit(
 	)
 
 IErrorHandler get_ErrorHandler(

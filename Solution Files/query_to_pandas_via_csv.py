@@ -27,7 +27,7 @@ from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
-sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
+sol_file = 'Solution Files/Model Q2 Week1 DA Solution.zip' # replace with your solution file
 csv_file = 'generator_data.csv'
 
 if not os.path.exists(sol_file):
