@@ -7,7 +7,7 @@ Created on Fri Sep 08 16:03:57 2017
 
 import os, sys, clr
 
-sys.path.append('C:/Program Files (x86)/Energy Exemplar/PLEXOS 8.1/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
 clr.AddReference('EEUTILITY')
 
 from EEUTILITY import Enums
@@ -22,7 +22,8 @@ def list_enum_names(enum):
     except:
         return ''
 
-with open('query_enums.txt','w') as fout:
+folder = os.path.dirname(__file__)
+with open(os.path.join(folder, 'query_enums.txt'),'w') as fout:
     # traverse all enums
     for t in clr.GetClrType(CollectionEnum).Assembly.GetTypes():
         if t.IsEnum:

@@ -13,6 +13,14 @@ import os, sys, clr
 import pandas as pd
 from datetime import datetime
 
+def make_property_list(*property_enums):
+    '''
+    Provide a list of property enums as parameters (as many as you like).
+    This function will return a string that can be used in the property_list 
+    param of the Solution.Query() method.
+    '''
+    return ','.join([str(x) for x in property_enums])
+
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
 sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
@@ -48,13 +56,23 @@ returns a ADODB recordset... however, you don't *need* to worry about that...
 '''
 
 # Run the query
-results = sol.Query(SimulationPhaseEnum.STSchedule, \
-                    CollectionEnum.SystemGenerators, \
-                    '', \
-                    '', \
-                    PeriodEnum.FiscalYear, \
-                    SeriesTypeEnum.Values, \
-                    '')
+# This example selects a handful of outputs (instead of all of them) to query from the output
+# Note that SystemOutGeneratorsEnum corresponds to the CollectionEnum.SystemGenerators that was
+# also a parameter of this call. THey must correspond to each other.
+#    e.g. 
+#       CollectionEnum.SystemRegions and SystemOutRegionsEnum
+#       CollectionEnum.ReserveGenerators and ReserveOutGeneratorsEnum
+#   etc.
+results = sol.Query(
+    SimulationPhaseEnum.STSchedule, CollectionEnum.SystemGenerators, 
+    '', '', PeriodEnum.FiscalYear, SeriesTypeEnum.Values, 
+    make_property_list(
+        SystemOutGeneratorsEnum.Generation,
+        SystemOutGeneratorsEnum.TotalGenerationCost,
+        SystemOutGeneratorsEnum.NetRevenue,
+        SystemOutGeneratorsEnum.SRMC
+        )
+    )
 
 # Check to see if the query had results
 if results.EOF:
