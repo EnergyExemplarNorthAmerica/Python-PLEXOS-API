@@ -9,7 +9,7 @@ Created on Mon Jun 05 11:36:46 2017
 import getpass, os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.2/')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 8.3/')
 clr.AddReference('PLEXOS7_NET.Core')
 clr.AddReference('EEUTILITY')
 

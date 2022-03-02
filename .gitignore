@@ -121,3 +121,4 @@ Input Files/new.xml
 Input Files/~*.xlsx
 Demo db/*
 *.txt
+Connect Server/connect.json

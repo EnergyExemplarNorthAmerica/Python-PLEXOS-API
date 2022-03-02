@@ -1,0 +1,10 @@
+[
+    {
+        "name": "<nick name for connect server>",
+        "server": "<actual server name or IP address>",
+        "port": "<port number:often either 443 or 8888>",
+        "trusteduser": "True <if you are using Active directory login else False>",
+        "username": "<your username if not trusteduser>",
+        "password": "<your password recommend you find a more secure way to do this in the long run>"
+    }
+]
