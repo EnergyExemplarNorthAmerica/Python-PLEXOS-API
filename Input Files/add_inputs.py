@@ -20,19 +20,25 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 from PLEXOS_NET.Core import DatabaseCore
 from EEUTILITY.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
+from System import DateTime
 
-if os.path.exists('rts_PLEXOS.xml'):
+folder = os.path.dirname(__file__)
+basefile = os.path.join(folder, 'rts_PLEXOS.xml')
+copiedfile = os.path.join(folder, 'rts2.xml')
+if os.path.exists(basefile):
+
 
     # delete the modified file if it already exists
-    if os.path.exists('rts2.xml'):
-        os.remove('rts2.xml')
+    if os.path.exists(copiedfile):
+        os.remove(copiedfile)
 
     # copy the PLEXOS input file
-    copyfile('rts_PLEXOS.xml', 'rts2.xml')
+    copyfile(basefile, copiedfile)
     
     # Create an object to store the input data
     db = DatabaseCore()
-    db.Connection('rts2.xml')
+    db.DisplayAlerts = False
+    db.Connection(copiedfile)
     
     # Add a category
     '''
@@ -42,6 +48,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     	)
     '''
     db.AddCategory(ClassEnum.Generator, 'API')
+    db.AddCategory(ClassEnum.GasPipeline, 'API')
     
     # Add an object (and the System Membership)
     '''
@@ -54,7 +61,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     	)
     '''
     db.AddObject('ApiGen', ClassEnum.Generator, True, 'API', 'Testing the API')
-    
+    db.AddObject('ApiPipe', ClassEnum.GasPipeline, True, 'API', 'Testing the API')
+
     # Add memberships
     '''
     Int32 AddMembership(
@@ -75,8 +83,11 @@ if os.path.exists('rts_PLEXOS.xml'):
     	String strChild
     	)    
     '''
-    mem_id = db.GetMembershipID(CollectionEnum.SystemGenerators, \
-                                'System', 'ApiGen')
+    mem_id = db.GetMembershipID(
+        CollectionEnum.SystemGenerators, 
+        'System', 
+        'ApiGen'
+    )
                                 
     # Add properties
     '''
@@ -95,10 +106,42 @@ if os.path.exists('rts_PLEXOS.xml'):
     	PeriodEnum PeriodTypeId
     	)   
     '''
-    # a. An alias for AddProperty
-    db.AddProperty(mem_id, int(SystemGeneratorsEnum.Units), \
-              1, 0.0, None, None, None, None, None, None, \
-              0, PeriodEnum.Interval)
+    # Add units for the new generator
+    db.AddProperty(
+        mem_id, 
+        int(SystemGeneratorsEnum.Units), 
+        1, 
+        0.0, 
+        None, 
+        None, 
+        None, 
+        None, 
+        None, 
+        None, 
+        0, 
+        PeriodEnum.Interval
+    )
+
+
+    # Add IsAvailable for the new pipeline
+    db.AddProperty(
+        db.GetMembershipID(
+            CollectionEnum.SystemGasPipelines, 
+            'System', 
+            'ApiPipe'
+        ),
+        int(SystemGasPipelinesEnum.IsAvailable), 
+        1, 
+        1, 
+        DateTime(2024,1,1),
+        None, 
+        None, 
+        None, 
+        None, 
+        None, 
+        0, 
+        PeriodEnum.Interval
+    )
     
     # save the data set
     db.Close()
