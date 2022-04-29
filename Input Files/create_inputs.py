@@ -5,6 +5,8 @@ Retrieve data from the PLEXOS input dataset
 Created on Sat Sep 09 19:19:57 2017
 
 @author: Steven
+
+P9 Tested
 """
 
 import os, sys, clr
@@ -38,10 +40,7 @@ def add_plexos_prop(db, parent_class_id, child_class_id, collection_id, \
     # Add the object if it hasn't been added yet
     objs = db.GetObjects(child_class_id)
     if objs is None or child_name not in objs:
-        if len(category) > 0:
-            db.AddObject(child_name, child_class_id, True, category, 'Added from Python')
-        else:
-            db.AddObject(child_name, child_class_id, True, '', 'Added from Python')
+        db.AddObject(child_name, child_class_id, True, category, 'Added from Python')
             
     '''
     Int32 GetMembershipID(
@@ -59,13 +58,16 @@ def add_plexos_prop(db, parent_class_id, child_class_id, collection_id, \
     	String strPropertyName
     	)
     '''
-    params = ( \
-        Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id), \
-        Enum.GetName(clr.GetClrType(ClassEnum), child_class_id), \
-        Enum.GetName(clr.GetClrType(ClassEnum), child_class_id)+'s', \
-        prop_name)
-    enum_id = db.PropertyName2EnumId(*params)
-    
+    if type(prop_name) == str:
+        enum_id = db.PropertyName2EnumId(
+            Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id),
+            Enum.GetName(clr.GetClrType(ClassEnum), child_class_id),
+            Enum.GetName(clr.GetClrType(ClassEnum), child_class_id)+'s',
+            prop_name
+        )
+    elif type(prop_name) == int:
+        enum_id = prop_name
+
     db.AddProperty(mem_id, enum_id, 1, prop_value, None, None, None, \
               None, None, None, 0, PeriodEnum.Interval)
     
@@ -75,6 +77,7 @@ if os.path.exists('new.xml'):
 
 # Create an object to store the input data
 db = DatabaseCore()
+db.DisplayAlerts = False
 
 # create a new database
 '''
@@ -118,6 +121,8 @@ add_plexos_prop(db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes
 # One line
 add_plexos_prop(db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines, 'System', 'AB', 'Max Flow', 90)
 
+add_plexos_prop(db, ClassEnum.System, ClassEnum.GasPipeline, CollectionEnum.SystemGasPipelines, 'System', 'Pip', SystemGasPipelinesEnum.IsAvailable, 1)
+
 # Memberships
 '''
 Int32 AddMembership(
@@ -136,6 +141,11 @@ db.AddMembership(CollectionEnum.NodeRegion,'B','B')
 
 db.AddMembership(CollectionEnum.LineNodeFrom,'AB','A')
 db.AddMembership(CollectionEnum.LineNodeTo,'AB','B')
+
+db.AddObject('A', ClassEnum.GasNode, True, '', 'Added from Python')
+db.AddObject('B', ClassEnum.GasNode, True, '', 'Added from Python')
+db.AddMembership(CollectionEnum.GasPipelineGasNodeFrom, 'Pip', 'A')
+db.AddMembership(CollectionEnum.GasPipelineGasNodeTo, 'Pip', 'B')
 
 # save the data set
 db.Close()

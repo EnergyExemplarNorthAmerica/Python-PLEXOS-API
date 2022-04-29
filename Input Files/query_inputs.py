@@ -24,6 +24,7 @@ from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # Create an object to store the input data
 db = DatabaseCore()
+db.DisplayAlerts = False
 '''
 Void Connection(
 	String strFile
