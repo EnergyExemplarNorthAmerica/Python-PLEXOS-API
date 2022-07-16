@@ -1,0 +1,77 @@
+object_id,property_id,phase_id,report_period,report_summary,report_statistics,report_samples,write_flat_files,state,filtered_report,collection_id,property_group_id,enum_id,name,summary_name,unit_id,summary_unit_id,is_period,is_summary,is_multi_band,is_quantity,is_LT,is_PA,is_MT,is_ST,lang_id,summary_lang_id,description,is_visible
+416,1,4,True,True,False,False,True,,True,1,3,1,Generation,Generation,1,2,True,True,False,False,True,False,True,True,227,227,Generation,True
+416,4,4,True,False,False,False,True,,True,1,3,4,Units Generating,Units Generating,0,0,True,False,False,False,True,False,True,True,816,816,Number of units generating,True
+416,80,4,True,True,False,False,True,,True,1,3,80,Fuel Cost,Fuel Cost,14,34,True,True,False,True,True,False,True,True,882,882,Total fuel bill,True
+416,81,4,True,True,False,False,True,,True,1,3,81,Fuel Transport Cost,Fuel Transport Cost,14,34,True,True,False,True,True,False,True,True,997,997,Cost of transporting fuel to the generator,True
+416,84,4,True,True,False,False,True,,True,1,3,84,VO&M Cost,VO&M Cost,14,34,True,True,False,True,True,False,True,True,850,850,Total variable operation and maintenance cost,True
+416,90,4,True,True,False,False,True,,True,1,3,90,Generation Cost,Generation Cost,14,34,True,True,False,True,True,False,True,True,236,236,Cost of generation,True
+416,91,4,True,True,False,False,True,,True,1,3,91,Start & Shutdown Cost,Start & Shutdown Cost,14,34,True,True,False,False,True,False,True,True,760,760,Cost of unit starts and shutdowns,True
+416,94,4,True,True,False,False,True,,True,1,3,94,Emissions Cost,Emissions Cost,14,34,True,True,False,True,True,False,True,True,166,166,Cost from production of emissions,True
+416,96,4,True,True,False,False,True,,True,1,3,96,Total Generation Cost,Total Generation Cost,14,34,True,True,False,True,True,False,True,True,1013,1013,"Total generation cost including fuel, VO&M, start and shutdown costs and emissions costs.",True
+416,107,4,True,True,False,False,True,,True,1,3,107,SRMC,SRMC,33,33,True,True,False,False,True,False,True,True,759,759,Short-run marginal cost (Fuel + VO&M + Emissions),True
+416,112,4,True,False,False,False,True,,True,1,3,112,Offer Quantity,Offer Quantity,1,2,True,True,True,False,True,False,True,True,572,572,Quantity offered in band,True
+416,113,4,True,False,False,False,True,,True,1,3,113,Offer Price,Offer Price,33,33,True,True,True,False,True,False,True,True,569,569,Price of energy in band,True
+416,117,4,True,False,False,False,True,,True,1,3,117,Offer Cleared,Offer Cleared,1,2,True,True,True,False,True,False,True,True,566,566,Quantity cleared in band,True
+416,121,4,True,True,False,False,True,,True,1,3,121,Price Received,Price Received,33,33,True,True,False,False,True,False,True,True,618,618,Price received for generation,True
+416,133,4,True,True,False,False,True,,True,1,3,133,Pool Revenue,Pool Revenue,14,34,True,True,False,True,True,False,True,True,609,609,Pool revenue,True
+416,137,4,True,True,False,False,True,,True,1,3,137,Net Revenue,Net Revenue,14,34,True,True,False,True,True,False,True,True,552,552,Net revenue,True
+416,183,4,True,True,False,False,True,,True,1,6,183,Installed Capacity,Installed Capacity,1,1,True,True,False,False,True,True,True,True,320,320,Installed capacity (Max Capacity x Units),True
+416,199,4,True,True,False,False,True,,True,1,6,199,Available Capacity,Available Energy,1,2,True,True,False,False,True,False,True,True,23,2345,Available capacity,True
+416,320,4,True,True,False,False,True,,True,33,3,1,Price,Price,29,29,True,True,False,False,True,False,True,True,612,612,Fuel price,True
+416,323,4,True,True,False,False,True,,True,33,3,4,Time-weighted Price,Time-weighted Price,29,29,True,True,False,False,True,False,True,True,789,789,Time weighted average price of fuel.,True
+416,324,4,True,True,False,False,True,,True,33,3,5,Offtake,Offtake,17,18,True,True,False,True,True,False,True,True,577,577,Fuel offtake,True
+416,334,4,True,True,False,False,True,,True,33,3,15,Cost,Cost,14,34,True,True,False,True,True,False,True,True,117,117,Total cost of fuel used excluding taxation,True
+416,381,4,True,True,False,False,True,,True,55,3,1,Production,Production,19,20,True,True,False,True,True,False,True,True,624,624,Production of the emission,True
+416,460,4,True,True,False,False,True,,True,80,3,3,Initial Volume,Initial Volume,24,24,True,True,False,False,True,False,True,True,318,318,Storage volume at the start of the period,True
+416,461,4,True,True,False,False,True,,True,80,3,4,End Volume,End Volume,24,24,True,True,False,False,True,False,True,True,170,170,Storage volume at the end of the period,True
+416,470,4,True,True,False,False,True,,True,80,3,13,Inflow,Inflow,25,24,True,True,False,False,True,False,True,True,312,312,Inflow,True
+416,471,4,True,True,False,False,True,,True,80,3,14,Release,Release,25,24,True,True,False,False,True,False,True,True,676,676,Total releases from storage,True
+416,508,4,True,True,False,False,True,,True,88,3,1,Flow,Flow,25,24,True,True,False,False,True,False,True,True,205,205,Flow on waterway,True
+416,527,4,True,True,True,True,True,,True,99,3,1,Generation,Generation,1,2,True,True,False,False,True,False,True,True,227,227,Generation on physical contract,True
+416,528,4,True,True,True,True,True,,True,99,3,2,Load,Load,1,2,True,True,False,False,True,False,True,True,349,349,Load on physical contract,True
+416,546,4,True,True,True,True,True,,True,107,3,1,Load,Load,1,2,True,True,False,False,True,False,True,True,349,349,Purchaser load,True
+416,565,4,True,True,False,False,True,,True,115,3,1,Provision,Provision,1,2,True,True,False,False,True,False,True,True,634,634,Reserve provision,True
+416,567,4,True,True,False,False,True,,True,115,3,3,Shortage,Shortage,1,2,True,True,False,False,True,False,True,True,746,746,Reserve shortfall,True
+416,618,4,True,True,False,False,True,,True,131,3,3,SoC,SoC,12,12,True,True,False,False,True,False,True,True,1660,1660,State of Charge,True
+416,620,4,True,True,False,False,True,,True,131,3,5,Generation,Generation,1,2,True,True,False,False,True,False,True,True,227,227,generation (battery discharge),True
+416,621,4,True,True,False,False,True,,True,131,3,6,Load,Load,1,2,True,True,False,False,True,False,True,True,349,349,load (battery recharge),True
+416,622,4,True,True,False,False,True,,True,131,3,7,Net Generation,Net Generation,1,2,True,True,False,False,True,False,True,True,539,539,Net of generation and load,True
+416,789,4,True,True,False,False,True,,True,179,3,1,Load,Load,1,2,True,True,False,False,True,False,True,True,349,349,Load,True
+416,793,4,True,True,False,False,True,,True,179,3,5,Generation,Generation,1,2,True,True,False,False,True,False,True,True,227,227,Generation,True
+416,811,4,True,True,False,False,True,,True,179,3,23,Imports,Imports,1,2,True,True,False,False,True,False,True,True,294,294,Imports,True
+416,812,4,True,True,False,False,True,,True,179,3,24,Exports,Exports,1,2,True,True,False,False,True,False,True,True,192,192,Exports,True
+416,813,4,True,True,False,False,True,,True,179,3,25,Net Interchange,Net Interchange,1,2,True,True,False,False,True,False,True,True,543,543,Exports - Imports,True
+416,817,4,True,True,False,False,True,,True,179,3,29,Unserved Energy,Unserved Energy,1,2,True,True,False,False,True,False,True,True,825,825,Unserved energy (USE),True
+416,822,4,True,True,False,False,True,,True,179,3,34,Dump Energy,Dump Energy,1,2,True,True,False,False,True,False,True,True,158,158,Dump energy,True
+416,838,4,True,True,False,False,True,,True,179,3,50,Generation Cost,Generation Cost,14,34,True,True,False,True,True,False,True,True,236,236,Total variable cost of generation,True
+416,843,4,True,True,False,False,True,,True,179,3,55,Total Generation Cost,Total Generation Cost,14,34,True,True,False,True,True,False,True,True,1013,1013,"Total generation cost including fuel, VO&M, start and shutdown costs and emissions costs.",True
+416,848,4,True,True,False,False,True,,True,179,3,60,Price,Price,33,33,True,True,False,False,True,False,True,True,612,612,Price,True
+416,854,4,True,True,False,False,True,,True,179,3,66,Cost to Load,Cost to Load,14,34,True,True,False,True,True,False,True,True,120,120,Cost to load of their energy purchases,True
+416,855,4,True,True,False,False,True,,True,179,3,67,Generator Pool Revenue,Generator Pool Revenue,14,34,True,True,False,True,True,False,True,True,248,248,Total generator pool revenue,True
+416,857,4,True,True,False,False,True,,True,179,3,69,Settlement Surplus,Settlement Surplus,14,34,True,True,False,True,True,False,True,True,741,741,Difference between cost to load and generator revenue,True
+416,1004,4,True,True,False,False,True,,True,211,3,1,Load,Load,1,2,True,True,False,False,True,False,True,True,349,349,Load,True
+416,1008,4,True,True,False,False,True,,True,211,3,5,Generation,Generation,1,2,True,True,False,False,True,False,True,True,227,227,Generation,True
+416,1026,4,True,True,False,False,True,,True,211,3,23,Imports,Imports,1,2,True,True,False,False,True,False,True,True,294,294,Imports,True
+416,1027,4,True,True,False,False,True,,True,211,3,24,Exports,Exports,1,2,True,True,False,False,True,False,True,True,192,192,Exports,True
+416,1028,4,True,True,False,False,True,,True,211,3,25,Net Interchange,Net Interchange,1,2,True,True,False,False,True,False,True,True,543,543,Exports - Imports,True
+416,1032,4,True,True,False,False,True,,True,211,3,29,Unserved Energy,Unserved Energy,1,2,True,True,False,False,True,False,True,True,825,825,Unserved energy (USE),True
+416,1037,4,True,True,False,False,True,,True,211,3,34,Dump Energy,Dump Energy,1,2,True,True,False,False,True,False,True,True,158,158,Dump energy,True
+416,1063,4,True,True,False,False,True,,True,211,3,60,Price,Price,33,33,True,True,False,False,True,False,True,True,612,612,Energy price,True
+416,1071,4,True,True,False,False,True,,True,211,3,68,Cost to Load,Cost to Load,14,34,True,True,False,True,True,False,True,True,120,120,Cost to load of their energy purchases,True
+416,1072,4,True,True,False,False,True,,True,211,3,69,Generator Pool Revenue,Generator Pool Revenue,14,34,True,True,False,True,True,False,True,True,248,248,Total generator pool revenue,True
+416,1074,4,True,True,False,False,True,,True,211,3,71,Settlement Surplus,Settlement Surplus,14,34,True,True,False,True,True,False,True,True,741,741,Difference between cost to load and generator revenue,True
+416,1240,4,True,True,False,False,True,,True,264,3,1,Flow,Flow,1,2,True,True,False,False,True,False,True,True,205,205,Flow,True
+416,1243,4,True,True,False,False,True,,True,264,3,4,Export Limit,Export Limit,1,1,True,True,False,False,True,False,True,True,1241,1241,Maximum flow allowed on the line,True
+416,1244,4,True,True,False,False,True,,True,264,3,5,Import Limit,Import Limit,1,1,True,True,False,False,True,False,True,True,1242,1242,Minimum flow allowed on the line,True
+416,1373,4,True,True,False,False,True,,True,294,3,1,Flow,Flow,1,2,True,True,False,False,True,False,True,True,205,205,Flow on the interface,True
+416,1420,4,True,True,False,False,True,,True,311,3,1,Price,Price,33,33,True,True,False,False,True,False,True,True,612,612,Price at the hub,True
+416,2403,4,True,True,False,False,True,,True,590,1,2,Hours Active,Hours Active,6,6,True,True,False,False,True,False,True,True,274,274,Number of hours the maintenance is active.,True
+416,2405,4,True,True,False,False,True,,True,590,1,4,Cost,Cost,14,34,True,True,True,False,True,False,True,True,117,117,Cost of the maintenance event.,True
+416,2577,4,True,True,False,False,True,,True,629,3,1,Sales,Sales,0,0,True,True,False,False,True,False,True,True,718,718,Sales to the market,True
+416,2578,4,True,True,False,False,True,,True,629,3,2,Purchases,Purchases,0,0,True,True,False,False,True,False,True,True,648,648,Purchases from the market,True
+416,2589,4,True,True,False,False,True,,True,629,3,13,Price,Price,14,14,True,True,False,False,True,False,True,True,612,612,Price point on market demand function,True
+416,2607,4,True,True,False,False,True,,True,635,1,4,Hours Binding,Hours Binding,6,6,True,True,False,False,True,True,True,True,276,276,Number of hours the Constraint is binding.,True
+416,2609,4,True,True,False,False,True,,True,635,1,6,Price,Price,14,14,True,True,False,False,True,False,True,True,612,612,Constraint dual variable value at optimal solution,True
+416,2622,4,True,True,False,False,True,,True,642,1,1,Value,Value,0,0,True,True,False,False,True,True,True,True,842,842,Value of generic decision variable,True
+416,2623,4,True,True,False,False,True,,True,642,1,2,Reduced Cost,Reduced Cost,14,14,True,True,False,True,True,True,True,True,1496,1496,Reduced cost of the generic decision variable,True
+416,2641,4,True,True,False,False,True,,True,655,1,3,Value,Value,0,0,True,True,False,False,True,True,True,True,842,842,Sample value,True

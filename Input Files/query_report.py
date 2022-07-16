@@ -11,27 +11,26 @@ from EEUTILITY.Enums import *
 
 def get_report_properties(model_name):
     plx = DatabaseCore()
-    plx.Connection(r'C:\Users\Steven.Broad\Downloads\test_model.xml')
+    plx.Connection(os.path.join(os.path.dirname(__file__),'rts_PLEXOS.xml'))
 
-    print('\n'.join(plx.GetObjects(ClassEnum.Model)))
-    report_names = plx.GetChildMembers(CollectionEnum.ModelReport, input('Model Name:'))
-    model_id = [plx.ObjectName2Id(ClassEnum.Report, x) for x in report_names]
-    print(model_id)
+    report_names = plx.GetChildMembers(CollectionEnum.ModelReport, model_name)
+    report_id = [plx.ObjectName2Id(ClassEnum.Report, x) for x in report_names]
 
     rst, x = plx.GetData('t_report',[])
     rr = rst.GetRows()
-    print('\n'.join([x.Name for x in rst.Fields]))
     report_df = pd.DataFrame([[rr[i, j] for i in range(rr.GetLength(0))] for j in range(rr.GetLength(1))],columns = [x.Name for x in rst.Fields])
+    report_df['filtered_report'] = report_df['object_id'].apply(lambda x: x in report_id)
+    report_df = report_df[report_df['filtered_report']]
 
     rst, x = plx.GetData('t_property_report',[])
     rr = rst.GetRows()
-    print('\n'.join([x.Name for x in rst.Fields]))
     report_prop_df = pd.DataFrame([[rr[i, j] for i in range(rr.GetLength(0))] for j in range(rr.GetLength(1))],columns = [x.Name for x in rst.Fields])
+    report_prop_df = report_prop_df.set_index('property_id')
     df = report_df.join(report_prop_df,on='property_id',rsuffix='_prop')
-    print(df)
+    return df
 
 def main():
-    get_report_properties('Nodal').to_csv('nodal_report.csv')
+    get_report_properties('Q3 DA').to_csv(os.path.join(os.path.dirname(__file__),'q3dareport.csv'), index=False)
 
 if __name__ == '__main__':
     main()
