@@ -7,7 +7,7 @@ Created on Fri Sep 08 15:03:46 2017
 @author: Steven
 """
 
-# standard Python/SciPy libraries
+# standard Python libraries
 import os, clr, sys
 
 # Python .NET interface
@@ -32,7 +32,7 @@ sol.Connection(sol_file)
 '''
 Simple query: works similarly to PLEXOS Solution Viewer
 
-Solution.Query(phase, collection, parent, child, period, series, props)
+Solution.QueryToList(phase, collection, parent, child, period, series, props)
     phase -> SimulationPhaseEnum
     collection -> CollectionEnum
     parent -> the name of a parent object or ''
@@ -40,29 +40,32 @@ Solution.Query(phase, collection, parent, child, period, series, props)
     period -> PeriodEnum
     series -> SeriesTypeEnum
     props -> a string containing an integer indicating the Property to query or ''
-returns a ADODB recordset... however, you don't *need* to worry about that...
 '''
 
 # Run the query
-results = sol.Query(SimulationPhaseEnum.STSchedule, \
-                    CollectionEnum.SystemGenerators, \
-                    '', \
-                    '', \
-                    PeriodEnum.FiscalYear, \
-                    SeriesTypeEnum.Values, \
-                    '')
+results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
+                          CollectionEnum.SystemGenerators, \
+                          '', \
+                          '', \
+                          PeriodEnum.FiscalYear, \
+                          SeriesTypeEnum.Values, \
+                          '')
+
+#Important to Close() the Solution to clear working storage.
+sol.Close()
 
 # Check to see if the query had results
-if results.EOF:
+if results is None:
     print('No results')
     exit
 else:
-    results.MoveFirst()
+    #fetch all columns
+    columns = results.Columns
+    #NOTE: Specifying a limited set of columns here may significantly improve performance.
+    #eg columns = ["child_name", "property_name", "_date", "value"]
+    values = [[row.GetProperty(n) for n in columns] for row in results]
 
-print('\t'.join([x.Name for x in results.Fields]))
-
-# loop through the recordset    
-while not results.EOF:
-    print('\t'.join([str(x.Value) for x in results.Fields]))
-    results.MoveNext() #VERY IMPORTANT
-    
+# loop through the results
+print('\t'.join(columns))
+for row in values:
+    print('\t'.join([str(v) for v in row]))

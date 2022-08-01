@@ -12,7 +12,6 @@ Created on Fri Sep 08 15:03:46 2017
 import os, sys, clr
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
@@ -27,6 +26,9 @@ from EEUTILITY.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import Enum, DateTime
 
+#NOTE: Because None is a reserved word in Python we must use the Parse() method to get the value of AggregationEnum.None
+aggregation_none = Enum.Parse(AggregationEnum.Category.GetType(), "None")
+
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
 sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
@@ -39,7 +41,7 @@ else:
     '''
     Simple query: works similarly to PLEXOS Solution Viewer
     
-    Recordset Query(
+    QueryToList(
     	SimulationPhaseEnum SimulationPhaseId,
     	CollectionEnum CollectionId,
     	String ParentName,
@@ -59,45 +61,40 @@ else:
     '''
     
     # Setup and run the query
-    results = sol.Query(SimulationPhaseEnum.STSchedule, \
+    propId = sol.PropertyName2EnumId("System", "Generator", "Generators", "Generation")
+    results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
               CollectionEnum.SystemGenerators, \
               '', \
               '', \
               PeriodEnum.Interval, \
               SeriesTypeEnum.Names, \
-              '1', \
-              DateTime.Parse('4/1/2024'), \
-              DateTime.Parse('4/1/2024'), \
+              str(propId), \
+              DateTime.Parse('2024-04-01'), \
+              DateTime.Parse('2024-04-01'), \
               '0', \
               '', \
               '', \
-              0, \
-              'Coal/Steam', \
-              '')
+              aggregation_none, \
+              'Coal/Steam')
+
+    #Important to Close() the Solution to clear working storage.
+    sol.Close()
    
     # Check to see if the query had results
-    if results == None or results.EOF:
+    if results is None:
         print('No results')
-    
     else:
-    
         # Create a DataFrame with a column for each column in the results
-        cols = [x.Name for x in results.Fields]
+        cols = list(results.Columns)
+        # phase_name is the last column before the name value columns
         names = cols[cols.index('phase_name')+1:]
-        df = pd.DataFrame(columns=cols)
-        
-        # loop through the recordset
-        idx = 0    
-        while not results.EOF:
-            df.loc[idx] = [datetime(x.Value.Year,x.Value.Month,x.Value.Day,x.Value.Hour,x.Value.Minute,0) if str(type(x.Value)) == 'System.DateTime' else x.Value for x in results.Fields]
-            idx += 1
-            results.MoveNext() #VERY IMPORTANT
-        
+        names.append("_date")
+        values = [[row.GetProperty(n) for n in names] for row in results]
+        df = pd.DataFrame(values, columns=names)
         # plotting the results
         # https://matplotlib.org/api/pyplot_api.html
-        plot_df = df.loc[:,names]
-        plot_df.index = df._date
-        ax = plot_df.plot(kind='area', title='Total Generation', figsize=(18,11), stacked=True)
+        df.index = df._date
+        ax = df.plot(kind='area', title='Total Generation', figsize=(18,11), stacked=True)
         ax.set_xlabel('Date and Time Starting')
         ax.set_ylabel('Generation (MWh)')
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), \
