@@ -27,7 +27,7 @@ from EnergyExemplar.PLEXOS.Utility.Enums import *
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
-sol_file = 'Solution Files/Model Q2 Week1 DA Solution.zip' # replace with your solution file
+sol_file = 'Model Q2 Week1 DA Solution.zip' # replace with your solution file
 csv_file = 'generator_data.csv'
 
 if not os.path.exists(sol_file):
@@ -39,7 +39,7 @@ sol.Connection(sol_file)
 '''
 Simple query: works similarly to PLEXOS Solution Viewer
 
-Solution.Query(phase, collection, parent, child, period, series, props)
+Solution.QueryToList(phase, collection, parent, child, period, series, props)
     phase -> SimulationPhaseEnum
     collection -> CollectionEnum
     parent -> the name of a parent object or ''
@@ -47,7 +47,6 @@ Solution.Query(phase, collection, parent, child, period, series, props)
     period -> PeriodEnum
     series -> SeriesTypeEnum
     props -> a string containing an integer indicating the Property to query or ''
-returns a ADODB recordset... however, you don't *need* to worry about that...
 '''
 
 # Run the query
@@ -61,8 +60,5 @@ results = sol.QueryToCSV( \
                     SeriesTypeEnum.Values, \
                     '')
 
-df = pd.read_csv(csv_file)
-    
-wb = pd.ExcelWriter('query.xlsx')
-df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
-wb.save()
+#Important to Close() the Solution to clear working storage.
+sol.Close()

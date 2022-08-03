@@ -45,15 +45,16 @@ print(','.join([str(v) for v in clr.GetClrType(ClassEnum).GetEnumValues()]) + '\
 
 # suppose you need the string associated with a specific enum value
 # e.g., ClassEnum.System
-print (ClassEnum.System) # prints 1
-print (str(ClassEnum.System)) # prints 1
+print (ClassEnum.System) # prints System
+print (int(ClassEnum.System)) # prints 1
+print (str(ClassEnum.System)) # prints System
 
 # to get from the value to the text do the following
 print (clr.GetClrType(ClassEnum).GetEnumName(ClassEnum.System)) # prints System
 
 # to get from the text to the value do the following
 from System import Enum
-print (Enum.Parse(clr.GetClrType(ClassEnum), 'System')) # prints 1
+print (Enum.Parse(clr.GetClrType(ClassEnum), 'System')) # prints System
 
 
 

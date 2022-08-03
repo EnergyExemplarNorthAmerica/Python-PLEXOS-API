@@ -5,10 +5,9 @@ Created on Tue Jan 22 22:55:30 2019
 @author: Steven.Broad
 """
 
-# standard Python/SciPy libraries
+# standard Python libraries
 import os, clr, sys
 import pandas as pd
-import matplotlib.pyplot as plt
 from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
@@ -36,7 +35,7 @@ else:
     '''
     Simple query: works similarly to PLEXOS Solution Viewer
     
-    Recordset Query(
+    QueryToList(
     	SimulationPhaseEnum SimulationPhaseId,
     	CollectionEnum CollectionId,
     	String ParentName,
@@ -56,41 +55,33 @@ else:
     '''
     
     # Setup and run the query
-    results = sol.Query(SimulationPhaseEnum.STSchedule, \
+    propId = sol.PropertyName2EnumId("System", "Generator", "Generators", "Generation")
+    results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
               CollectionEnum.SystemGenerators, \
               '', \
               '', \
               PeriodEnum.Interval, \
               SeriesTypeEnum.Values, \
-              '1', \
-              DateTime.Parse('4/1/2024'), \
-              DateTime.Parse('4/1/2024'), \
+              str(propId), \
+              DateTime.Parse('2024-04-01'), \
+              DateTime.Parse('2024-04-07'), \
               '0', \
               '', \
               '', \
               AggregationEnum.Category, \
               '', \
               '')
+              
+    #Important to Close() the Solution to clear working storage.
+    sol.Close()
 
     # Check to see if the query had results
-    if results == None or results.EOF:
+    if results is None:
         print('No results')
-    
     else:
-        results.MoveFirst()
-
         # Create a DataFrame with a column for each column in the results
-        cols = [x.Name for x in results.Fields]
-        names = cols[cols.index('phase_name')+1:]
-        df = pd.DataFrame(columns=cols)
-        
-        # loop through the recordset
-        idx = 0    
-        while not results.EOF:
-            df.loc[idx] = [datetime(x.Value.Year,x.Value.Month,x.Value.Day,x.Value.Hour,x.Value.Minute,0) if str(type(x.Value)) == 'System.DateTime' else x.Value for x in results.Fields]
-            idx += 1
-            results.MoveNext() #VERY IMPORTANT
-
-    wb = pd.ExcelWriter('query_by_category.xlsx')
-    df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
-    wb.save()
+        columns = ["category_name", "property_name", "_date", "value"]
+        df = pd.DataFrame([[row.GetProperty(n) for n in columns] for row in results], columns=columns)
+        wb = pd.ExcelWriter('query_by_category.xlsx')
+        df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
+        wb.save()

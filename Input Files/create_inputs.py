@@ -23,25 +23,47 @@ from EEUTILITY.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import Enum
 
+#Some methods require class and collection names instead of enums,
+# so we will cache the conversion from enum to string
+CLASS_NAMES = {}
+SYSTEM_COLLECTION_NAMES = {}
+
+def cache_classes(db):
+    global CLASS_NAMES
+    rs = db.GetData("t_class", None)[0]
+    while rs.EOF == False:
+        CLASS_NAMES[rs["class_id"]] = rs["name"]
+        rs.MoveNext()
+    rs.Close()
+    
+def cache_system_collections(db):
+    global SYSTEM_COLLECTION_NAMES
+    rs = db.GetData("t_collection", None)[0]
+    while rs.EOF == False:
+        if rs["parent_class_id"] == 1:
+            SYSTEM_COLLECTION_NAMES[rs["child_class_id"]] = rs["name"]
+        rs.MoveNext()
+    rs.Close()
+    
 def add_plexos_prop(db, parent_class_id, child_class_id, collection_id, \
                     parent_name, child_name, prop_name, prop_value, \
                     category = ''):
     '''
     Create a simple plexos object and populate some
     system properties.
-    '''    
+    '''
     
     # Add the category if it hasn't been added yet
     cats = db.GetCategories(child_class_id)
     if len(category) > 0:
-        if cats is None or category not in db.GetCategories(child_class_id):
+        if cats is None or category not in cats:
             db.AddCategory(child_class_id, category)
     
     # Add the object if it hasn't been added yet
     objs = db.GetObjects(child_class_id)
     if objs is None or child_name not in objs:
         db.AddObject(child_name, child_class_id, True, category, 'Added from Python')
-            
+
     '''
     Int32 GetMembershipID(
     	CollectionEnum nCollectionId,
@@ -58,15 +80,12 @@ def add_plexos_prop(db, parent_class_id, child_class_id, collection_id, \
     	String strPropertyName
     	)
     '''
-    if type(prop_name) == str:
-        enum_id = db.PropertyName2EnumId(
-            Enum.GetName(clr.GetClrType(ClassEnum), parent_class_id),
-            Enum.GetName(clr.GetClrType(ClassEnum), child_class_id),
-            Enum.GetName(clr.GetClrType(ClassEnum), child_class_id)+'s',
-            prop_name
-        )
-    elif type(prop_name) == int:
-        enum_id = prop_name
+    enum_id = db.PropertyName2EnumId(
+        CLASS_NAMES[int(parent_class_id)],
+        CLASS_NAMES[int(child_class_id)],
+        SYSTEM_COLLECTION_NAMES[int(child_class_id)],
+        prop_name
+    )
 
     db.AddProperty(mem_id, enum_id, 1, prop_value, None, None, None, \
               None, None, None, 0, PeriodEnum.Interval)
@@ -88,6 +107,10 @@ Boolean NewEmptyDatabase(
 '''
 db.NewEmptyDatabase('./new.xml', True)
 db.Connection('new.xml')
+
+# Build enum to string lookups
+cache_classes(db)
+cache_system_collections(db)
 
 # Four generators
 add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A1', 'Units', 1, 'A')
@@ -121,7 +144,7 @@ add_plexos_prop(db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes
 # One line
 add_plexos_prop(db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines, 'System', 'AB', 'Max Flow', 90)
 
-add_plexos_prop(db, ClassEnum.System, ClassEnum.GasPipeline, CollectionEnum.SystemGasPipelines, 'System', 'Pip', SystemGasPipelinesEnum.IsAvailable, 1)
+add_plexos_prop(db, ClassEnum.System, ClassEnum.GasPipeline, CollectionEnum.SystemGasPipelines, 'System', 'Pip', "Is Available", 1)
 
 # Memberships
 '''
