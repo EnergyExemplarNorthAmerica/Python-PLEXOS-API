@@ -27,7 +27,7 @@ from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import Enum, DateTime
 
 #NOTE: Because None is a reserved word in Python we must use the Parse() method to get the value of AggregationEnum.None
-aggregation_none = Enum.Parse(AggregationEnum.Category.GetType(), "None")
+aggregation_none = Enum.Parse(clr.GetClrType(AggregationEnum), "None")
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
