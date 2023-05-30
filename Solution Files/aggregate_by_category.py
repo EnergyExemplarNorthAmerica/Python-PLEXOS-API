@@ -81,7 +81,7 @@ else:
     else:
         # Create a DataFrame with a column for each column in the results
         columns = ["category_name", "property_name", "_date", "value"]
-        df = pd.DataFrame([[row.GetProperty(n) for n in columns] for row in results], columns=columns)
+        df = pd.DataFrame([[row.GetProperty.Overloads[String](n) for n in columns] for row in results], columns=columns)
         wb = pd.ExcelWriter('query_by_category.xlsx')
         df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
         wb.save()

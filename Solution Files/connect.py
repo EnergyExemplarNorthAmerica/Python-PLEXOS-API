@@ -20,6 +20,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
+from System import String
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
@@ -63,7 +64,7 @@ else:
     columns = results.Columns
     #NOTE: Specifying a limited set of columns here may significantly improve performance.
     #eg columns = ["child_name", "property_name", "_date", "value"]
-    values = [[row.GetProperty(n) for n in columns] for row in results]
+    values = [[row.GetProperty.Overloads[String](n) for n in columns] for row in results]
 
 # loop through the results
 print('\t'.join(columns))

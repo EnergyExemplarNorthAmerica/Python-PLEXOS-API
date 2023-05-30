@@ -24,6 +24,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
+from System import String
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
@@ -73,7 +74,7 @@ else:
     else:
         # Create a DataFrame with a column for each column in the results
         columns = results.Columns
-        df = pd.DataFrame([[row.GetProperty(n) for n in columns] for row in results], columns=columns)
+        df = pd.DataFrame([[row.GetProperty.Overloads[String](n) for n in columns] for row in results], columns=columns)
         wb = pd.ExcelWriter('query.xlsx')
         df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
         wb.save()
