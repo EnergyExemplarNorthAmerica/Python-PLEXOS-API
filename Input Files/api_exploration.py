@@ -6,13 +6,16 @@ Created on Sat Sep 09 20:11:21 2017
 
 @author: Steven
 
-P9 Tested
+P92 Tested
 """
 
-import os, sys, clr
+import os, sys, pythonnet
+pythonnet.load('coreclr')
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API/')
+
+import clr
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.2')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -34,7 +37,7 @@ def list_method(method):
     text += '\n\t)\n\n'
     return text
               
-with open('DatabaseCoreMethods.txt', 'w') as fout:
+with open(os.path.join(os.path.dirname(__file__), 'DatabaseCoreMethods.txt'), 'w') as fout:
     for method in clr.GetClrType(DatabaseCore).GetMethods():
         fout.write(list_method(method))
 

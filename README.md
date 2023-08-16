@@ -93,19 +93,17 @@ For assistance with PLEXOS licensing, please visit
 https://www.energyexemplar.com/contact-us
 
 # Development Environment
-The authors are primarily using Anaconda Python version 3.6.x along with the PythonNet
-repository, along with PLEXOS Desktop 9.0R03. 
+The authors are primarily using Python version 3.11.4 along with the PythonNet 3.0.x
+repository, along with PLEXOS Desktop 9.2R06. 
 
-*PLEXOS 9 API requires an additional set of software components to interoperate with Python.
-In the Energy Exemplar download portal, this is called "API 9.000 R03". This library is 
-PLEXOS version specific.*
+*PLEXOS 9.1 or later -- together with Python 3.8+ and PythonNet 3.0+ -- no longer 
+requires the use of the separately downloaded API installer.*
 
 The authors also use Visual Studio Code with the Python and GitExtensions VSCode extensions.
 
-Also .NET Framework 4.7.2 or higher is needed. However, you would have to install 
-this to use PLEXOS.
+Also .NET Core 6 or higher is needed. *You will likely need to install the .NET Core 6 SDK.*
 
-Anaconda --> https://www.anaconda.com/download/
+Python 3.11 --> https://www.python.org/downloads/ (Make sure to install pip)
 
 Python for .NET --> https://pythonnet.github.io/
 
