@@ -11,11 +11,10 @@ Created on Fri Sep 08 15:03:46 2017
 # standard Python libraries
 import os, clr, sys
 import pandas as pd
-from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -58,11 +57,12 @@ else:
     '''
     
     # Setup and run the query
-    results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
-              CollectionEnum.SystemGenerators, \
-              '', \
-              '', \
-              PeriodEnum.FiscalYear, \
+    collections = sol.FetchAllCollectionIds()
+    results = sol.QueryToList(SimulationPhaseEnum.STSchedule,
+              collections["SystemGenerators"],
+              '',
+              '',
+              PeriodEnum.FiscalYear,
               SeriesTypeEnum.Values)
               
     #Important to Close() the Solution to clear working storage.
@@ -77,4 +77,4 @@ else:
         df = pd.DataFrame([[row.GetProperty.Overloads[String](n) for n in columns] for row in results], columns=columns)
         wb = pd.ExcelWriter('query.xlsx')
         df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
-        wb.save()
+        wb.close()

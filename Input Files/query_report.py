@@ -1,6 +1,6 @@
 import os, sys, clr, pandas as pd
 
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -22,9 +22,12 @@ def recordset_to_list(rs):
 def get_report_properties(model_name):
     plx = DatabaseCore()
     plx.Connection(os.path.join(os.path.dirname(__file__),'rts_PLEXOS.xml'))
+    
+    classes = plx.FetchAllClassIds()
+    collections = plx.FetchAllCollectionIds()
 
-    report_names = plx.GetChildMembers(CollectionEnum.ModelReport, model_name)
-    report_id = [plx.ObjectName2Id(ClassEnum.Report, x) for x in report_names]
+    report_names = plx.GetChildMembers(collections["ModelReport"], model_name)
+    report_id = [plx.ObjectName2Id(classes["Report"], x) for x in report_names]
 
     rst, x = plx.GetData('t_report',[])
     report_data = recordset_to_list(rst)

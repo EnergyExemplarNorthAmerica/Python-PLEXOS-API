@@ -21,7 +21,7 @@ def parse_logfile(pattern, foldername, modelname, linecount = 1):
             currentlines = linecount
             
         if currentlines > 0:
-            lines.append(line)
+            lines.append(line.strip())
             currentlines -= 1
             
         if currentlines == 0 and len(lines) > 0:
@@ -30,9 +30,10 @@ def parse_logfile(pattern, foldername, modelname, linecount = 1):
             yield retval
             
 def main():
-    run_model(plexos_path, 'test.xml', '.', 'Base')
+    plexospath = "C:\\Program Files\\Energy Exemplar\\PLEXOS 10.0"
+    run_model(plexospath, 'test.xml', '.', 'Base')
     for res in parse_logfile('ST Schedule Completed', '.', 'Base', 25):
-        print res
+        print(res)
         
 if __name__ == '__main__':
     main()

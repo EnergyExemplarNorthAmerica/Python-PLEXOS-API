@@ -12,7 +12,7 @@ P9 Tested
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -112,39 +112,42 @@ db.Connection('new.xml')
 cache_classes(db)
 cache_system_collections(db)
 
+classes = db.FetchAllClassIds()
+collections = db.FetchAllCollectionIds()
+
 # Four generators
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A1', 'Units', 1, 'A')
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A1', 'Max Capacity', 50)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A1', 'Fuel Price', 1.5)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A1', 'Heat Rate', 10)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A1', 'Units', 1, 'A')
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A1', 'Max Capacity', 50)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A1', 'Fuel Price', 1.5)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A1', 'Heat Rate', 10)
 
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A2', 'Units', 1, 'A')
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A2', 'Max Capacity', 50)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A2', 'Fuel Price', 1.5)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'A2', 'Heat Rate', 11)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A2', 'Units', 1, 'A')
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A2', 'Max Capacity', 50)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A2', 'Fuel Price', 1.5)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'A2', 'Heat Rate', 11)
 
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B1', 'Units', 1, 'B')
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B1', 'Max Capacity', 20)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B1', 'Fuel Price', 3)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B1', 'Heat Rate', 10)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B1', 'Units', 1, 'B')
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B1', 'Max Capacity', 20)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B1', 'Fuel Price', 3)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B1', 'Heat Rate', 10)
 
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B2', 'Units', 1, 'B')
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B2', 'Max Capacity', 50)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B2', 'Fuel Price', 3)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Generator, CollectionEnum.SystemGenerators, 'System', 'B2', 'Heat Rate', 11)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B2', 'Units', 1, 'B')
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B2', 'Max Capacity', 50)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B2', 'Fuel Price', 3)
+add_plexos_prop(db, classes["System"], classes["Generator"], collections["SystemGenerators"], 'System', 'B2', 'Heat Rate', 11)
 
 # Two regions
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Region, CollectionEnum.SystemRegions, 'System', 'A', 'Load', 0)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Region, CollectionEnum.SystemRegions, 'System', 'B', 'Load', 120)
+add_plexos_prop(db, classes["System"], classes["Region"], collections["SystemRegions"], 'System', 'A', 'Load', 0)
+add_plexos_prop(db, classes["System"], classes["Region"], collections["SystemRegions"], 'System', 'B', 'Load', 120)
 
 # Two nodes
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes, 'System', 'A', 'Load Participation Factor', 1)
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Node, CollectionEnum.SystemNodes, 'System', 'B', 'Load Participation Factor', 1)
+add_plexos_prop(db, classes["System"], classes["Node"], collections["SystemNodes"], 'System', 'A', 'Load Participation Factor', 1)
+add_plexos_prop(db, classes["System"], classes["Node"], collections["SystemNodes"], 'System', 'B', 'Load Participation Factor', 1)
 
 # One line
-add_plexos_prop(db, ClassEnum.System, ClassEnum.Line, CollectionEnum.SystemLines, 'System', 'AB', 'Max Flow', 90)
+add_plexos_prop(db, classes["System"], classes["Line"], collections["SystemLines"], 'System', 'AB', 'Max Flow', 90)
 
-add_plexos_prop(db, ClassEnum.System, ClassEnum.GasPipeline, CollectionEnum.SystemGasPipelines, 'System', 'Pip', "Is Available", 1)
+add_plexos_prop(db, classes["System"], classes["GasPipeline"], collections["SystemGasPipelines"], 'System', 'Pip', "Is Available", 1)
 
 # Memberships
 '''
@@ -154,21 +157,21 @@ Int32 AddMembership(
 	String strChild
 	)
 '''
-db.AddMembership(CollectionEnum.GeneratorNodes,'A1','A')
-db.AddMembership(CollectionEnum.GeneratorNodes,'A2','A')
-db.AddMembership(CollectionEnum.GeneratorNodes,'B1','B')
-db.AddMembership(CollectionEnum.GeneratorNodes,'B2','B')
+db.AddMembership(collections["GeneratorNodes"],'A1','A')
+db.AddMembership(collections["GeneratorNodes"],'A2','A')
+db.AddMembership(collections["GeneratorNodes"],'B1','B')
+db.AddMembership(collections["GeneratorNodes"],'B2','B')
 
-db.AddMembership(CollectionEnum.NodeRegion,'A','A')
-db.AddMembership(CollectionEnum.NodeRegion,'B','B')
+db.AddMembership(collections["NodeRegion"],'A','A')
+db.AddMembership(collections["NodeRegion"],'B','B')
 
-db.AddMembership(CollectionEnum.LineNodeFrom,'AB','A')
-db.AddMembership(CollectionEnum.LineNodeTo,'AB','B')
+db.AddMembership(collections["LineNodeFrom"],'AB','A')
+db.AddMembership(collections["LineNodeTo"],'AB','B')
 
-db.AddObject('A', ClassEnum.GasNode, True, '', 'Added from Python')
-db.AddObject('B', ClassEnum.GasNode, True, '', 'Added from Python')
-db.AddMembership(CollectionEnum.GasPipelineGasNodeFrom, 'Pip', 'A')
-db.AddMembership(CollectionEnum.GasPipelineGasNodeTo, 'Pip', 'B')
+db.AddObject('A', classes["GasNode"], True, '', 'Added from Python')
+db.AddObject('B', classes["GasNode"], True, '', 'Added from Python')
+db.AddMembership(collections["GasPipelineGasNodeFrom"], 'Pip', 'A')
+db.AddMembership(collections["GasPipelineGasNodeTo"], 'Pip', 'B')
 
 # save the data set
 db.Close()

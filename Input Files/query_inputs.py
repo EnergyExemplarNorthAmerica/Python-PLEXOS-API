@@ -12,7 +12,7 @@ P9 Tested
 import os, sys, clr
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -35,22 +35,25 @@ if os.path.exists('Input Files'): os.chdir('Input Files')
 db.Connection('rts_PLEXOS.xml')
 db.DisplayAlerts = False
 
+classes = db.FetchAllClassIds()
+collections = db.FetchAllCollectionIds()
+
 output_file = open('rts_PLEXOS.txt','w')
 
 # list the generators
 output_file.write('List of generators\n')
 '''
 String[] GetObjects(
-	ClassEnum nClassId
+	int nClassId
 	)
 '''
-for gen in db.GetObjects(ClassEnum.Generator):
+for gen in db.GetObjects(classes["Generator"]):
     output_file.write(gen + '\n')
     
 # query data for a generator
 '''
 Recordset GetPropertiesTable(
-	CollectionEnum CollectionId,
+	int CollectionId,
 	String ParentNameList[ = None],
 	String ChildNameList[ = None],
 	String TimesliceList[ = None],
@@ -58,7 +61,7 @@ Recordset GetPropertiesTable(
 	String CategoryList[ = None]
 	)
 '''
-rs = db.GetPropertiesTable(CollectionEnum.SystemGenerators,'','101_1')
+rs = db.GetPropertiesTable(collections["SystemGenerators"],'','101_1')
 rs.MoveFirst()
 
 # write the data in the table from the ADODB.Recordset
