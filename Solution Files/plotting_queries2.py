@@ -15,19 +15,21 @@ import matplotlib.pyplot as plt
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
+clr.AddReference('PLEXOSCommon')
 
 # Import from .NET assemblies (both PLEXOS and system)
 from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
+from PLEXOSCommon.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
 from System import Enum, DateTime, String
 
 #NOTE: Because None is a reserved word in Python we must use the Parse() method to get the value of AggregationEnum.None
-aggregation_none = Enum.Parse(clr.GetClrType(AggregationEnum), "None")
+aggregation_none = Enum.Parse(clr.GetClrType(AggregationTypeEnum), "None")
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
@@ -61,20 +63,22 @@ else:
     '''
     
     # Setup and run the query
-    propId = sol.PropertyName2EnumId("System", "Generator", "Generators", "Generation")
-    results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
-              CollectionEnum.SystemGenerators, \
-              '', \
-              '', \
-              PeriodEnum.Interval, \
-              SeriesTypeEnum.Names, \
-              str(propId), \
-              DateTime.Parse('2024-04-01'), \
-              DateTime.Parse('2024-04-01'), \
-              '0', \
-              '', \
-              '', \
-              aggregation_none, \
+    collections = sol.FetchAllCollectionIds()
+    properties = sol.FetchAllPropertyEnums()
+    propId = properties["SystemGenerators.Generation"]
+    results = sol.QueryToList(SimulationPhaseEnum.STSchedule,
+              collections["SystemGenerators"],
+              '',
+              '',
+              PeriodEnum.Interval,
+              SeriesTypeEnum.Names,
+              str(propId),
+              DateTime.Parse('2024-04-01'),
+              DateTime.Parse('2024-04-01'),
+              '0',
+              '',
+              '',
+              aggregation_none,
               'Coal/Steam')
 
     #Important to Close() the Solution to clear working storage.

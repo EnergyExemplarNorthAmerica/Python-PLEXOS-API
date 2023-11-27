@@ -13,7 +13,7 @@ import os, sys, clr
 from shutil import copyfile
 
 # load PLEXOS assemblies
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -38,6 +38,10 @@ if os.path.exists('rts_PLEXOS.xml'):
     # Create an object to store the input data
     db = DatabaseCore()
     db.Connection('rts3.xml')
+    
+    classes = db.FetchAllClassIds()
+    collections = db.FetchAllCollectionIds()
+    attributes = db.FetchAllAttributeEnums()
 
     '''
     Int32 CopyObject(
@@ -46,8 +50,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     	ClassEnum nClassId
     	)
     '''
-    db.CopyObject('Q1 DA','APIModel',ClassEnum.Model)
-    db.CopyObject('Q1 DA','APIHorizon',ClassEnum.Horizon)
+    db.CopyObject('Q1 DA','APIModel',classes["Model"])
+    db.CopyObject('Q1 DA','APIHorizon',classes["Horizon"])
     
     '''
     Int32 RemoveMembership(
@@ -56,8 +60,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     	String strChild
     	)
     '''
-    db.RemoveMembership(CollectionEnum.ModelHorizon, 'Q1 DA', 'APIHorizon')
-    db.RemoveMembership(CollectionEnum.ModelHorizon, 'APIModel', 'Q1 DA')
+    db.RemoveMembership(collections["ModelHorizon"], 'Q1 DA', 'APIHorizon')
+    db.RemoveMembership(collections["ModelHorizon"], 'APIModel', 'Q1 DA')
     
     '''
     Boolean UpdateAttribute(
@@ -70,13 +74,13 @@ if os.path.exists('rts_PLEXOS.xml'):
     '''    
     # a list of tuples... these tuples match the signature of UpdateAttribute and AddAttribute
     #   i.e., (ClassEnum, String, Int32, Double)
-    attr = [(ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.DateFrom), DateTime(2024,1,1).ToOADate()),
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.StepType), 4.0),
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.StepCount), 1.0),
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoDateFrom), DateTime(2024,2,15).ToOADate()),
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoStepType), 2.0),
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoAtaTime), 3.0),
-            (ClassEnum.Horizon, 'APIHorizon', int(HorizonAttributeEnum.ChronoStepCount), 4.0)]
+    attr = [(classes["Horizon"], 'APIHorizon', attributes["Horizon.DateFrom"], DateTime(2024,1,1).ToOADate()),
+            (classes["Horizon"], 'APIHorizon', attributes["Horizon.StepType"], 4.0),
+            (classes["Horizon"], 'APIHorizon', attributes["Horizon.StepCount"], 1.0),
+            (classes["Horizon"], 'APIHorizon', attributes["Horizon.ChronoDateFrom"], DateTime(2024,2,15).ToOADate()),
+            (classes["Horizon"], 'APIHorizon', attributes["Horizon.ChronoStepType"], 2.0),
+            (classes["Horizon"], 'APIHorizon', attributes["Horizon.ChronoAtaTime"], 3.0),
+            (classes["Horizon"], 'APIHorizon', attributes["Horizon.ChronoStepCount"], 4.0)]
 
     # loop through the attributes to add/update    
     for param in attr:

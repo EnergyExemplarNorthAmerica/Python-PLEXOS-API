@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -24,7 +24,7 @@ clr.AddReference('EnergyExemplar.PLEXOS.Utility')
 from PLEXOS_NET.Core import *
 from EEUTILITY.Enums import *
 from EnergyExemplar.PLEXOS.Utility.Enums import *
-from System import *
+from System import String
 
 # Create a PLEXOS solution file object and load the solution
 sol = Solution()
@@ -48,9 +48,10 @@ Solution.QueryToList(phase, collection, parent, child, period, series, props)
     props -> a string containing an integer indicating the Property to query or ''
 '''
 
+collections = sol.FetchAllCollectionIds()
 # Run the query
 results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
-                          CollectionEnum.SystemGenerators, \
+                          collections["SystemGenerators"], \
                           '', \
                           '', \
                           PeriodEnum.FiscalYear, \

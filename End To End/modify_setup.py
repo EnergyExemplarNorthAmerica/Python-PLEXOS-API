@@ -9,7 +9,7 @@ import os, sys, clr, datetime as dt
 from shutil import copyfile
 
 # load PLEXOS assemblies
-plexos_path = 'C:/Program Files/Energy Exemplar/PLEXOS 9.0 API'
+plexos_path = 'C:/Program Files/Energy Exemplar/PLEXOS 10.0 API'
 
 sys.path.append(plexos_path)
 clr.AddReference('PLEXOS_NET.Core')
@@ -39,6 +39,10 @@ def modify_model_horizon(datafile, modelname, start):
     # Create an object to store the input data
     db = DatabaseCore()
     db.Connection(tempfile)
+    
+    classes = db.FetchAllClassIds()
+    collections = db.FetchAllCollectionIds()
+    attributes = db.FetchAllAttributeEnums()
 
     '''
     String[] GetChildMembers(
@@ -57,11 +61,11 @@ def modify_model_horizon(datafile, modelname, start):
     	)
     '''
    
-    horizons = db.GetChildMembers(CollectionEnum.ModelHorizon, modelname)
+    horizons = db.GetChildMembers(collections["ModelHorizon"], modelname)
     for hor in horizons:
-        db.UpdateAttribute(ClassEnum.Horizon, hor, int(HorizonAttributeEnum.DateFrom), DateTime(start.Year, 1, 1).ToOADate())
-        db.UpdateAttribute(ClassEnum.Horizon, hor, int(HorizonAttributeEnum.StepType), 4)
-        db.UpdateAttribute(ClassEnum.Horizon, hor, int(HorizonAttributeEnum.ChronoDateFrom), start.ToOADate())
+        db.UpdateAttribute(classes["Horizon"], hor, int(attributes["Horizon.DateFrom"]), DateTime(start.Year, 1, 1).ToOADate())
+        db.UpdateAttribute(classes["Horizon"], hor, int(attributes["Horizon.StepType"]), 4)
+        db.UpdateAttribute(classes["Horizon"], hor, int(attributes["Horizon.ChronoDateFrom"]), start.ToOADate())
                     
     # save the data set
     db.Close()

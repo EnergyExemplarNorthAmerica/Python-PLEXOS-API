@@ -12,7 +12,7 @@ from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -55,22 +55,25 @@ else:
     '''
     
     # Setup and run the query
+    collections = sol.FetchAllCollectionIds()
+    props = sol.FetchAllPropertyEnums()
     propId = sol.PropertyName2EnumId("System", "Generator", "Generators", "Generation")
-    results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
-              CollectionEnum.SystemGenerators, \
-              '', \
-              '', \
-              PeriodEnum.Interval, \
-              SeriesTypeEnum.Values, \
-              str(propId), \
-              DateTime.Parse('2024-04-01'), \
-              DateTime.Parse('2024-04-07'), \
-              '0', \
-              '', \
-              '', \
-              AggregationEnum.Category, \
-              '', \
-              '')
+    results = sol.QueryToList(SimulationPhaseEnum.STSchedule,
+              collections["SystemGenerators"],
+              '',
+              '',
+              PeriodEnum.Interval,
+              SeriesTypeEnum.Values,
+              str(propId),
+              DateTime.Parse('2024-04-01'),
+              DateTime.Parse('2024-04-07'),
+              '0',
+              '',
+              '',
+              AggregationTypeEnum.CategoryAggregation,
+              '',
+              '',
+              OperationTypeEnum.SUM)
               
     #Important to Close() the Solution to clear working storage.
     sol.Close()
@@ -84,4 +87,4 @@ else:
         df = pd.DataFrame([[row.GetProperty.Overloads[String](n) for n in columns] for row in results], columns=columns)
         wb = pd.ExcelWriter('query_by_category.xlsx')
         df.to_excel(wb, 'Query') # 'Query' is the name of the worksheet
-        wb.save()
+        wb.close()

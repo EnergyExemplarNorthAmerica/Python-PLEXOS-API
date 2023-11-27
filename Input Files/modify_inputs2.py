@@ -16,7 +16,7 @@ from shutil import copyfile
 # load PLEXOS assemblies
 # unfortunately there was an error in the PLEXOS 8.1 API that caused
 #   scenario tagging to fail. It was fixed in version 8.2.
-sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 9.0 API')
+sys.path.append('C:\Program Files\Energy Exemplar\PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -42,6 +42,10 @@ if os.path.exists('rts_PLEXOS.xml'):
     db = DatabaseCore()
     db.DisplayAlerts = False
     db.Connection('rts4.xml')
+    
+    classes = db.FetchAllClassIds()
+    collections = db.FetchAllCollectionIds()
+    properties = db.FetchAllPropertyEnums()
 
     # Add a category of scenarios if needed
     '''
@@ -54,8 +58,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     	String strCategory
     	)
     '''
-    if not db.CategoryExists(ClassEnum.Scenario, 'Added by API'):
-        db.AddCategory(ClassEnum.Scenario, 'Added by API')
+    if not db.CategoryExists(classes["Scenario"], 'Added by API'):
+        db.AddCategory(classes["Scenario"], 'Added by API')
 
     # Add a scenario
     '''
@@ -68,7 +72,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     	)
     '''
     scenario = 'API{:%Y%m%d%H%M}'.format(datetime.now())
-    db.AddObject(scenario, ClassEnum.Scenario, True, 'Added by API')
+    db.AddObject(scenario, classes["Scenario"], True, 'Added by API')
 
     # Create data and tag it with the scenario
     '''
@@ -89,8 +93,8 @@ if os.path.exists('rts_PLEXOS.xml'):
     '''
     
     # parameters
-    mem_id = db.GetMembershipID(CollectionEnum.SystemFuels,'System','NG/CT')
-    enum_id = int(SystemFuelsEnum.Price) 
+    mem_id = db.GetMembershipID(collections["SystemFuels"],'System','NG/CT')
+    enum_id = properties["SystemFuels.Price"]
     
     # we'll add three property rows... monthly gas prices for 3 months
     params = [(mem_id, enum_id, 1, 5.0, DateTime(2024,1,1), None, None, None, None, scenario, None, PeriodEnum.Interval),
@@ -113,7 +117,7 @@ if os.path.exists('rts_PLEXOS.xml'):
     	String strChild
     	)
     '''
-    db.AddMembership(CollectionEnum.ModelScenarios, 'Q1 DA', scenario)
+    db.AddMembership(collections["ModelScenarios"], 'Q1 DA', scenario)
     
     # save the data set
     db.Close()

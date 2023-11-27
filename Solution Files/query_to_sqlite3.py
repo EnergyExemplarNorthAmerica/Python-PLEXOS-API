@@ -15,7 +15,7 @@ import sqlite3 as sql
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -49,12 +49,13 @@ Solution.QueryToList(phase, collection, parent, child, period, series, props)
 '''
 
 # Run the query
-results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
-                    CollectionEnum.SystemGenerators, \
-                    '', \
-                    '', \
-                    PeriodEnum.FiscalYear, \
-                    SeriesTypeEnum.Values, \
+collections = sol.FetchAllCollectionIds()
+results = sol.QueryToList(SimulationPhaseEnum.STSchedule,
+                    collections["SystemGenerators"],
+                    '',
+                    '',
+                    PeriodEnum.FiscalYear,
+                    SeriesTypeEnum.Values,
                     '')
                     
 #Important to Close() the Solution to clear working storage.
@@ -84,7 +85,7 @@ wb = pd.ExcelWriter('sql_query.xlsx')
 sql_df.to_excel(wb, 'SQL Query')
 
 # save the excel file
-wb.save()
+wb.close()
 
 # close the sqlite3 connection
 conn.close()

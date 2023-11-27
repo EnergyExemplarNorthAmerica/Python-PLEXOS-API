@@ -11,7 +11,7 @@ Created on Fri Sep 08 15:03:46 2017
 import os, clr, sys
 
 # Python .NET interface
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -43,9 +43,11 @@ Solution.QueryToList(phase, collection, parent, child, period, series, props)
     props -> a string containing an integer indicating the Property to query or ''
 '''
 
+collections = sol.FetchAllCollectionIds()
+
 # Run the query
 results = sol.QueryToList(SimulationPhaseEnum.STSchedule, \
-                          CollectionEnum.SystemGenerators, \
+                          collections["SystemGenerators"], \
                           '', \
                           '', \
                           PeriodEnum.FiscalYear, \

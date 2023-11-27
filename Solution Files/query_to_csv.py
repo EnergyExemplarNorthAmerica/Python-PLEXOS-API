@@ -11,11 +11,10 @@ Created on Fri Sep 08 15:03:46 2017
 # standard Python/SciPy libraries
 import os, clr, sys
 import pandas as pd
-from datetime import datetime
 
 # load PLEXOS assemblies... replace the path below with the installation
 #   installation folder for your PLEXOS installation.
-sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 9.0 API')
+sys.path.append('C:/Program Files/Energy Exemplar/PLEXOS 10.0 API')
 clr.AddReference('PLEXOS_NET.Core')
 clr.AddReference('EEUTILITY')
 clr.AddReference('EnergyExemplar.PLEXOS.Utility')
@@ -50,14 +49,15 @@ Solution.QueryToList(phase, collection, parent, child, period, series, props)
 '''
 
 # Run the query
-results = sol.QueryToCSV( \
+collections = sol.FetchAllCollectionIds()
+results = sol.QueryToCSV(
                     csv_file, False,
-                    SimulationPhaseEnum.STSchedule, \
-                    CollectionEnum.SystemGenerators, \
-                    '', \
-                    '', \
-                    PeriodEnum.FiscalYear, \
-                    SeriesTypeEnum.Values, \
+                    SimulationPhaseEnum.STSchedule,
+                    collections["SystemGenerators"],
+                    '',
+                    '',
+                    PeriodEnum.FiscalYear,
+                    SeriesTypeEnum.Values,
                     '')
 
 #Important to Close() the Solution to clear working storage.
